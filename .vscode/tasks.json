@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Launch PulseView",
+      "type": "shell",
+      "isBackground": true,
+      "command": "SIGROKDECODE_DIR=./decoders/ /home/vinci/Applications/pulseview-NIGHTLY-x86_64-release_57f66498b92d03ea98cc80e142e4bf2d.appimage",
+    },
+  ]
+}
