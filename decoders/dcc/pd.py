@@ -1984,7 +1984,7 @@ class Decoder(srd.Decoder):
         aspect = self.bidi_app['stat1'] & 0b11111
         # Optional second stat1 for extended accessories
         next_id = self.bidi_dec_bytes[i + byte_count] >> 2
-        if self.last_dcc_addr_type is 'EXT_ACCY' and next_id == 4:
+        if self.last_dcc_addr_type == 'EXT_ACCY' and next_id == 4:
             datagram = self.bidi_dec_bytes[i + byte_count:i + byte_count * 2]
             self.bidi_app['stat1'] = bidi_make_data(datagram)
             aspect = (self.bidi_app['stat1'] & 0b111) << 5 | aspect
