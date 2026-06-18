@@ -116,6 +116,18 @@ class Decoder(srd.Decoder):
             'values': tuple(range(114, 119 + 1))
         },
         {
+            'id': 'tts1',
+            'desc': 'BiDi Channel1 Start',
+            'default': BIDI_TTS1,
+            'values': tuple(range(BIDI_TCS_MAX, BIDI_TTS1 + 1))
+        },
+        {
+            'id': 'ttc2',
+            'desc': 'BiDi Channel2 End',
+            'default': BIDI_TTC2,
+            'values': tuple(range(BIDI_TTC2, BIDI_TCE_MAX + 1))
+        },
+        {
             'id': 'cv29_1',
             'desc': 'CV29:1',
             'default': 1,
@@ -251,6 +263,8 @@ class Decoder(srd.Decoder):
         self.max_bit1 = self.options['max_bit1']
         self.min_bit0 = self.options['min_bit0']
         self.max_bit0 = self.options['max_bit0']
+        self.tts1 = self.options['tts1']
+        self.ttc2 = self.options['ttc2']
         self.cv29_1 = self.options['cv29_1']
         self.debounce = self.options['debounce']
         try:
@@ -1489,9 +1503,9 @@ class Decoder(srd.Decoder):
         if not self.has_channel(Pin.BIDI) or not self.last_dcc_ss:
             return
 
-        # Outside of cutout
-        ss_tcs = self.ss_us2es(self.last_dcc_ss[-1], BIDI_TCS_MIN)
-        ss_tce = self.ss_us2es(self.last_dcc_ss[-1], BIDI_TCE_MAX)
+        # Outside of channel timing
+        ss_tcs = self.ss_us2es(self.last_dcc_ss[-1], self.tts1)
+        ss_tce = self.ss_us2es(self.last_dcc_ss[-1], self.ttc2)
         if self.samplenum < ss_tcs or self.samplenum > ss_tce:
             return
 
