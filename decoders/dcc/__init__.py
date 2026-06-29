@@ -16,7 +16,6 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, see <http://www.gnu.org/licenses/>.
 ##
-
 '''
 DCC is an acronym for Digital Command Control, a standardized protocol for
 controlling digital model railways. This decoder handles DCC as well as it's

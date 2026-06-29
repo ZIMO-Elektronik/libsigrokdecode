@@ -21,11 +21,14 @@ import sigrokdecode as srd
 from common.srdhelper import SrdIntEnum
 from .lists import *
 
+
 class ChannelError(Exception):
     pass
 
+
 class SamplerateError(Exception):
     pass
+
 
 Pin = SrdIntEnum.from_str('Pin', 'P N BIDI')
 Ann = SrdIntEnum.from_str(
@@ -50,6 +53,7 @@ Ann = SrdIntEnum.from_str(
     'BIDI_ID BIDI_DATA '
     'HIGHLIGHT_ADDR HIGHLIGHT_INSTR ',
 )
+
 
 class Decoder(srd.Decoder):
     api_version = 3
@@ -151,7 +155,8 @@ class Decoder(srd.Decoder):
             'Highlight Instruction',
             'default':
             '',
-            'values': ('', 'Decoder Control', 'Consist Control', 'Advanced Operations', 'Speed and Direction',
+            'values': ('', 'Decoder Control', 'Consist Control',
+                       'Advanced Operations', 'Speed and Direction',
                        'Function Group', 'Feature Expansion', 'CV Access')
         },
         {
@@ -161,47 +166,73 @@ class Decoder(srd.Decoder):
             'values': ('No', 'Yes')
         },
     )
-    annotations = (('timing_valid', 'Valid'), ('timing_invalid', 'Invalid'),  #
-                   ('bit', 'Bit'),  #
-                   ('byte', 'Byte'),  # 
-                   ('error', 'Error'),  #
-                   ('frame_preamble', 'Preamble'), ('frame_startbit', 'Start Bit'), ('frame_address', 'Address'),
-                   ('frame_instruction', 'Instruction'), ('frame_checksum', 'Checksum'), ('frame_endbit', 'End Bit'),
-                   ('service_instruction', 'Instruction'),  # 
-                   ('broadcast_address', 'Address'), ('broadcast_instr', 'Instruction'),  # 
-                   ('loco_address', 'Address'), ('loco_instr', 'Instruction'),  #
-                   ('accessory_address', 'Address'), ('accessory_instr', 'Instruction'),  #
-                   ('data_transfer_address', 'Address'), ('data_transfer_instr', 'Instruction'),  #
-                   ('automatic_logon_address', 'Address'), ('automatic_logon_instr', 'Instruction'),  #
-                   ('idle_address', 'Address'), ('idle_instr', 'Instruction'),  #
-                   ('bidi_bit_start', 'Start Bit'), ('bidi_bit', 'Bit'), ('bidi_bit_stop', 'Stop Bit'),  #
-                   ('bidi_enc_byte', 'Byte'),  #
-                   ('bidi_dec_byte', 'Byte'),  #
-                   ('bidi_error', 'Error'),  #
-                   ('bidi_frame_tcs', 'Cutout Start'), ('bidi_frame_ch', 'Channel'), ('bidi_frame_tce', 'Cutout End'),
-                   ('bidi_id', 'Id'), ('bidi_data', 'Data'),  #
-                   ('highlight_address', 'Address'), ('highlight_instr', 'Instruction'))
+    annotations = (
+        ('timing_valid', 'Valid'),
+        ('timing_invalid', 'Invalid'),  #
+        ('bit', 'Bit'),  #
+        ('byte', 'Byte'),  # 
+        ('error', 'Error'),  #
+        ('frame_preamble', 'Preamble'),
+        ('frame_startbit', 'Start Bit'),
+        ('frame_address', 'Address'),
+        ('frame_instruction', 'Instruction'),
+        ('frame_checksum', 'Checksum'),
+        ('frame_endbit', 'End Bit'),
+        ('service_instruction', 'Instruction'),  # 
+        ('broadcast_address', 'Address'),
+        ('broadcast_instr', 'Instruction'),  # 
+        ('loco_address', 'Address'),
+        ('loco_instr', 'Instruction'),  #
+        ('accessory_address', 'Address'),
+        ('accessory_instr', 'Instruction'),  #
+        ('data_transfer_address', 'Address'),
+        ('data_transfer_instr', 'Instruction'),  #
+        ('automatic_logon_address', 'Address'),
+        ('automatic_logon_instr', 'Instruction'),  #
+        ('idle_address', 'Address'),
+        ('idle_instr', 'Instruction'),  #
+        ('bidi_bit_start', 'Start Bit'),
+        ('bidi_bit', 'Bit'),
+        ('bidi_bit_stop', 'Stop Bit'),  #
+        ('bidi_enc_byte', 'Byte'),  #
+        ('bidi_dec_byte', 'Byte'),  #
+        ('bidi_error', 'Error'),  #
+        ('bidi_frame_tcs', 'Cutout Start'),
+        ('bidi_frame_ch', 'Channel'),
+        ('bidi_frame_tce', 'Cutout End'),
+        ('bidi_id', 'Id'),
+        ('bidi_data', 'Data'),  #
+        ('highlight_address', 'Address'),
+        ('highlight_instr', 'Instruction'))
     annotation_rows = (
         ('timings', 'Timings', (Ann.TIMING_VALID, Ann.TIMING_INVALID)),
         ('bits', 'Bits', (Ann.BIT, )),
         ('bytes', 'Bytes', (Ann.BYTE, )),
         ('errors', 'Errors', (Ann.ERROR, )),
-        ('frames', 'Frames', (Ann.FRAME_PREAMBLE, Ann.FRAME_START_BIT, Ann.FRAME_ADDRESS, Ann.FRAME_INSTR,
-                              Ann.FRAME_CHECKSUM, Ann.FRAME_END_BIT)),
+        ('frames', 'Frames',
+         (Ann.FRAME_PREAMBLE, Ann.FRAME_START_BIT, Ann.FRAME_ADDRESS,
+          Ann.FRAME_INSTR, Ann.FRAME_CHECKSUM, Ann.FRAME_END_BIT)),
         ('service_packets', 'Service Packets', (Ann.SERVICE_INSTR, )),
-        ('broadcast_packets', 'Broadcast Packets', (Ann.BROADCAST_ADDR, Ann.BROADCAST_INSTR)),
+        ('broadcast_packets', 'Broadcast Packets', (Ann.BROADCAST_ADDR,
+                                                    Ann.BROADCAST_INSTR)),
         ('loco_packets', 'Loco Packets', (Ann.LOCO_ADDR, Ann.LOCO_INSTR)),
-        ('accessory_packets', 'Accessory Packets', (Ann.ACCY_ADDR, Ann.ACCY_INSTR)),
-        ('data_transfer_packets', 'Data transfer Packets', (Ann.DATA_TRANSFER_ADDR, Ann.DATA_TRANSFER_INSTR)),
-        ('automatic_logon_packets', 'Automatic logon Packets', (Ann.AUTOMATIC_LOGON_ADDR, Ann.AUTOMATIC_LOGON_INSTR)),
+        ('accessory_packets', 'Accessory Packets', (Ann.ACCY_ADDR,
+                                                    Ann.ACCY_INSTR)),
+        ('data_transfer_packets', 'Data transfer Packets',
+         (Ann.DATA_TRANSFER_ADDR, Ann.DATA_TRANSFER_INSTR)),
+        ('automatic_logon_packets', 'Automatic logon Packets',
+         (Ann.AUTOMATIC_LOGON_ADDR, Ann.AUTOMATIC_LOGON_INSTR)),
         ('idle_packets', 'Idle Packets', (Ann.IDLE_ADDR, Ann.IDLE_INSTR)),
-        ('bidi_bits', 'BiDi Bits', (Ann.BIDI_BIT_START, Ann.BIDI_BIT, Ann.BIDI_BIT_STOP)),
+        ('bidi_bits', 'BiDi Bits', (Ann.BIDI_BIT_START, Ann.BIDI_BIT,
+                                    Ann.BIDI_BIT_STOP)),
         ('bidi_encoded_bytes', 'BiDi Encoded Bytes', (Ann.BIDI_ENC_BYTE, )),
         ('bidi_decoded_bytes', 'BiDi Decoded Bytes', (Ann.BIDI_DEC_BYTE, )),
         ('bidi_errors', 'BiDi Errors', (Ann.BIDI_ERROR, )),
-        ('bidi_frames', 'BiDi Frames', (Ann.BIDI_FRAME_TCS, Ann.BIDI_FRAME_CH, Ann.BIDI_FRAME_TCE)),
+        ('bidi_frames', 'BiDi Frames', (Ann.BIDI_FRAME_TCS, Ann.BIDI_FRAME_CH,
+                                        Ann.BIDI_FRAME_TCE)),
         ('bidi_datagrams', 'BiDi Datagrams', (Ann.BIDI_ID, Ann.BIDI_DATA)),
-        ('highlights', 'Highlights', (Ann.HIGHLIGHT_ADDR, Ann.HIGHLIGHT_INSTR)),
+        ('highlights', 'Highlights', (Ann.HIGHLIGHT_ADDR,
+                                      Ann.HIGHLIGHT_INSTR)),
     )
     binary = (('csv', 'CSV file'), )
 
@@ -257,7 +288,8 @@ class Decoder(srd.Decoder):
         '''Read and verify options.'''
         self.out_ann = self.register(srd.OUTPUT_ANN)
         self.out_binary = self.register(srd.OUTPUT_BINARY)
-        self.service_mode = True if self.options['initial_mode'] == 'Service' else False
+        self.service_mode = True if self.options[
+            'initial_mode'] == 'Service' else False
         self.min_preamble_bits = self.options['min_preamble_bits']
         self.min_bit1 = self.options['min_bit1']
         self.max_bit1 = self.options['max_bit1']
@@ -274,7 +306,8 @@ class Decoder(srd.Decoder):
         self.highlight_instr = self.options['highlight_instruction']
         self.empty_new_line_after_packets_annotation = '\n' if self.options[
             'empty_new_line_after_packets_annotation'] == 'Yes' else ''
-        csv_header = 'timestamp,dcc,bidi\n' if self.has_channel(Pin.BIDI) else 'timestamp,dcc\n'
+        csv_header = 'timestamp,dcc,bidi\n' if self.has_channel(
+            Pin.BIDI) else 'timestamp,dcc\n'
         self.put(0, 0, self.out_binary, [0, csv_header.encode('utf-8')])
 
     def ss_es2us(self, startsample, endsample):
@@ -374,21 +407,28 @@ class Decoder(srd.Decoder):
         :return: Byte at i
         :rtype: int
         '''
-        return (self.dcc_hbits[i + 0 * 2] << 7 | self.dcc_hbits[i + 1 * 2] << 6 | self.dcc_hbits[i + 2 * 2] << 5
-                | self.dcc_hbits[i + 3 * 2] << 4 | self.dcc_hbits[i + 4 * 2] << 3 | self.dcc_hbits[i + 5 * 2] << 2
-                | self.dcc_hbits[i + 6 * 2] << 1 | self.dcc_hbits[i + 7 * 2] << 0)
+        return (self.dcc_hbits[i + 0 * 2] << 7 | self.dcc_hbits[i + 1 * 2] << 6
+                | self.dcc_hbits[i + 2 * 2] << 5
+                | self.dcc_hbits[i + 3 * 2] << 4
+                | self.dcc_hbits[i + 4 * 2] << 3
+                | self.dcc_hbits[i + 5 * 2] << 2
+                | self.dcc_hbits[i + 6 * 2] << 1
+                | self.dcc_hbits[i + 7 * 2] << 0)
 
     def instr_feature_expansion_fxx_fyy_annotate_dcc_helper(self, i, xx, yy):
         '''Convenience helper for annotating the 8x 'Feature Extension - FXX-FYY' instructions.'''
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Feature Expansion - F{}-F{}'.format(xx, yy)]])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['Feature Expansion - F{}-F{}'.format(xx, yy)]
+        ])
         i += BYTE_HBIT
         i = self.annotate_dcc_frame_start_bit(i)
         self.annotate_frame_instr(i)
         self.dcc_bytes.append(self.get_dcc_byte_at(i))
         f = [(self.dcc_bytes[-1] >> bit) & 0b1 for bit in range(8)]
         fstr = ' | '.join('F{}={}'.format(xx + i, f[i]) for i in range(8))
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [self.get_ann_instr(), [fstr]])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                 [self.get_ann_instr(), [fstr]])
         return i + BYTE_HBIT
 
     def bidi_annotate_app_adr_helper(self, i):
@@ -396,20 +436,35 @@ class Decoder(srd.Decoder):
         if 'adr_high' in self.bidi_app and 'adr_low' in self.bidi_app:
             if self.bidi_app['adr_high'] == 0:
                 addr = self.bidi_app['adr_low']
-                self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
-                         self.out_ann, [Ann.BIDI_DATA, ['Basic Loco={}'.format(addr)]])
+                self.put(
+                    self.bidi_bytes_ss[i + 1],
+                    self.ss_us2es(self.bidi_bytes_ss[i + 1],
+                                  10 * BIDI_BIT_TIME), self.out_ann,
+                    [Ann.BIDI_DATA, ['Basic Loco={}'.format(addr)]])
             elif self.bidi_app['adr_high'] == 0b01100000:
                 r = self.bidi_app['adr_low'] >> 7
                 addr = self.bidi_app['adr_low'] & 0x7F
-                self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
-                         self.out_ann, [Ann.BIDI_DATA, ['Reversed={} | Consist={}'.format(r, addr)]])
+                self.put(
+                    self.bidi_bytes_ss[i + 1],
+                    self.ss_us2es(self.bidi_bytes_ss[i + 1],
+                                  10 * BIDI_BIT_TIME), self.out_ann,
+                    [
+                        Ann.BIDI_DATA,
+                        ['Reversed={} | Consist={}'.format(r, addr)]
+                    ])
             else:
-                addr = (self.bidi_app['adr_high'] << 8 | self.bidi_app['adr_low']) & 0x3FFF
-                self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
-                         self.out_ann, [Ann.BIDI_DATA, ['Extended Loco={}'.format(addr)]])
+                addr = (self.bidi_app['adr_high'] << 8
+                        | self.bidi_app['adr_low']) & 0x3FFF
+                self.put(
+                    self.bidi_bytes_ss[i + 1],
+                    self.ss_us2es(self.bidi_bytes_ss[i + 1],
+                                  10 * BIDI_BIT_TIME), self.out_ann,
+                    [Ann.BIDI_DATA, ['Extended Loco={}'.format(addr)]])
         else:
-            self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
-                     self.out_ann, [Ann.BIDI_DATA, ['?']])
+            self.put(
+                self.bidi_bytes_ss[i + 1],
+                self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                self.out_ann, [Ann.BIDI_DATA, ['?']])
 
     def decode(self):
         if not self.samplerate:
@@ -445,7 +500,8 @@ class Decoder(srd.Decoder):
                 self.bidi = bidi
 
             # BiDi cutout end after last valid DCC packet (write CSV here before resetting!)
-            if self.last_dcc_ss and self.samplenum > self.ss_us2es(self.last_dcc_ss[-1], BIDI_TCE_MAX):
+            if self.last_dcc_ss and self.samplenum > self.ss_us2es(
+                    self.last_dcc_ss[-1], BIDI_TCE_MAX):
                 self.annotate_bidi()
                 self.csv_writerow()
                 self.reset_bidi()
@@ -485,7 +541,8 @@ class Decoder(srd.Decoder):
                 self.dcc_hbit_count = 0
                 self.state = 'END_BIT'
             # Halfbits must come in pairs
-            elif (self.dcc_hbit_count & 0b1 == 0) and (self.dcc_hbits[-2] != self.dcc_hbits[-1]):
+            elif (self.dcc_hbit_count & 0b1 == 0) and (self.dcc_hbits[-2]
+                                                       != self.dcc_hbits[-1]):
                 return self.annotate_and_reset_dcc()
         # 0 means more data, 1 means end
         elif self.state == 'END_BIT':
@@ -525,7 +582,8 @@ class Decoder(srd.Decoder):
     def annotate_dcc_byte(self, i):
         '''Annotate DCC byte.'''
         byte = self.get_dcc_byte_at(i)
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [Ann.BYTE, ['0x{:02X}'.format(byte)]])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                 [Ann.BYTE, ['0x{:02X}'.format(byte)]])
         return i + BYTE_HBIT
 
     def annotate_frame_address(self, i):
@@ -546,24 +604,34 @@ class Decoder(srd.Decoder):
             us = self.ss_es2us(self.dcc_ss[i], self.dcc_ss[i + 1])
             if i == 0 and BIDI_TCS_MIN <= us <= BIDI_TCS_MAX:
                 self.put(self.dcc_ss[i], self.dcc_ss[i + 1], self.out_ann,
-                         [Ann.TIMING_VALID, ['{}µs'.format(us), str(us)]])
-            elif i == 0 and (BIDI_TCE_MIN - BIDI_TCS_MAX) <= us <= (BIDI_TCE_MAX - BIDI_TCS_MIN):
-                self.put(self.dcc_ss[i], self.dcc_ss[i + 1], self.out_ann,
-                         [Ann.TIMING_VALID, ['{}µs (cutout)'.format(us), '{}µs'.format(us)]])
+                         [Ann.TIMING_VALID, ['{}µs'.format(us),
+                                             str(us)]])
+            elif i == 0 and (BIDI_TCE_MIN - BIDI_TCS_MAX) <= us <= (
+                    BIDI_TCE_MAX - BIDI_TCS_MIN):
+                self.put(self.dcc_ss[i], self.dcc_ss[i + 1], self.out_ann, [
+                    Ann.TIMING_VALID,
+                    ['{}µs (cutout)'.format(us), '{}µs'.format(us)]
+                ])
             elif i == 0 and BIDI_TCE_MIN <= us <= BIDI_TCE_MAX + self.max_bit0:
-                self.put(self.dcc_ss[i], self.dcc_ss[i + 1], self.out_ann,
-                         [Ann.TIMING_VALID, ['{}µs (maybe cutout)'.format(us), '{}µs'.format(us)]])
+                self.put(self.dcc_ss[i], self.dcc_ss[i + 1], self.out_ann, [
+                    Ann.TIMING_VALID,
+                    ['{}µs (maybe cutout)'.format(us), '{}µs'.format(us)]
+                ])
             else:
-                ann = Ann.TIMING_INVALID if self.us2hbit(us) == -1 else Ann.TIMING_VALID
-                self.put(self.dcc_ss[i], self.dcc_ss[i + 1], self.out_ann, [ann, ['{}µs'.format(us), str(us)]])
+                ann = Ann.TIMING_INVALID if self.us2hbit(
+                    us) == -1 else Ann.TIMING_VALID
+                self.put(self.dcc_ss[i], self.dcc_ss[i + 1], self.out_ann,
+                         [ann, ['{}µs'.format(us), str(us)]])
                 if i & 0b1:
                     hb0 = self.dcc_hbits[i - 1]
                     hb1 = self.dcc_hbits[i]
                     if hb0 == hb1:
-                        self.put(self.dcc_ss[i - 1], self.dcc_ss[i - 1 + BIT_HBIT], self.out_ann,
+                        self.put(self.dcc_ss[i - 1],
+                                 self.dcc_ss[i - 1 + BIT_HBIT], self.out_ann,
                                  [Ann.BIT, [str(self.dcc_hbits[i])]])
                     else:
-                        self.put(self.dcc_ss[i - 1], self.dcc_ss[i - 1 + BIT_HBIT], self.out_ann,
+                        self.put(self.dcc_ss[i - 1],
+                                 self.dcc_ss[i - 1 + BIT_HBIT], self.out_ann,
                                  [Ann.ERROR, ['Invalid Bit']])
 
     def annotate_dcc_preamble(self, i):
@@ -571,10 +639,12 @@ class Decoder(srd.Decoder):
         i = self.dcc_hbits.index(0)
         if i == 0:
             return 0
-        self.put(self.dcc_ss[0], self.dcc_ss[i], self.out_ann, [Ann.FRAME_PREAMBLE, ['Preamble', 'P']])
+        self.put(self.dcc_ss[0], self.dcc_ss[i], self.out_ann,
+                 [Ann.FRAME_PREAMBLE, ['Preamble', 'P']])
         # Handle trailing odd
         if i & 0b1 == 1:
-            self.put(self.dcc_ss[i], self.dcc_ss[i + 1], self.out_ann, [Ann.BIT, ['1']])
+            self.put(self.dcc_ss[i], self.dcc_ss[i + 1], self.out_ann,
+                     [Ann.BIT, ['1']])
             i += 1
         return i
 
@@ -604,7 +674,8 @@ class Decoder(srd.Decoder):
 
     def annotate_dcc_frame_endbit(self, i):
         '''Annotate DCC frame end bit and add empty \\n in case 'empty_new_line_after_packet' option is used.'''
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BIT_HBIT], self.out_ann, [Ann.FRAME_END_BIT, ['End Bit', 'End', 'E']])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BIT_HBIT], self.out_ann,
+                 [Ann.FRAME_END_BIT, ['End Bit', 'End', 'E']])
         return i + BIT_HBIT
 
     def annotate_dcc_address(self, i):
@@ -623,16 +694,21 @@ class Decoder(srd.Decoder):
 
         # Broadcast address
         if self.dcc_bytes[0] == 0:
-            self.put(ss, self.dcc_ss[i], self.out_ann, [Ann.BROADCAST_ADDR, ['Broadcast', 'B']])
+            self.put(ss, self.dcc_ss[i], self.out_ann,
+                     [Ann.BROADCAST_ADDR, ['Broadcast', 'B']])
             return (i, 0, 'BROADCAST')
 
         # Basic loco addresses 1-127
         elif self.dcc_bytes[0] <= 127:
             addr = self.dcc_bytes[0]
-            anns = ['Basic Loco={}'.format(addr), 'Loco={}'.format(addr), '{}'.format(addr)]
+            anns = [
+                'Basic Loco={}'.format(addr), 'Loco={}'.format(addr),
+                '{}'.format(addr)
+            ]
             self.put(ss, self.dcc_ss[i], self.out_ann, [Ann.LOCO_ADDR, anns])
             if addr == self.highlight_addr:
-                self.put(ss, self.dcc_ss[i], self.out_ann, [Ann.HIGHLIGHT_ADDR, anns])
+                self.put(ss, self.dcc_ss[i], self.out_ann,
+                         [Ann.HIGHLIGHT_ADDR, anns])
             return (i, self.dcc_bytes[0], 'BASIC_LOCO')
 
         # Basic and extended accessory addresses 0-2047
@@ -645,15 +721,21 @@ class Decoder(srd.Decoder):
             a10_8 = (~self.dcc_bytes[1] & 0x70) << 4
             a1_0 = (self.dcc_bytes[1] >> 1) & 0x03
             addr = a10_8 | a7_2 | a1_0
-            is_basic = self.dcc_bytes[1] & 0x80 or (self.dcc_bytes[1] & 0b10000001) == 0
+            is_basic = self.dcc_bytes[1] & 0x80 or (self.dcc_bytes[1]
+                                                    & 0b10000001) == 0
             fstr = 'Basic Accessory' if is_basic else 'Extended Accessory'
-            anns = ['{}={}'.format(fstr, addr), 'Accessory={}'.format(addr), '{}'.format(addr)]
+            anns = [
+                '{}={}'.format(fstr, addr), 'Accessory={}'.format(addr),
+                '{}'.format(addr)
+            ]
             is_nop = (self.dcc_bytes[1] & 0b10001000) == 0b00001000
             # This is so god damn stupid... don't annotate basic accessories and NOPs yet -.-
             if not is_basic and not is_nop:
-                self.put(ss, self.dcc_ss[i], self.out_ann, [Ann.ACCY_ADDR, anns])
+                self.put(ss, self.dcc_ss[i], self.out_ann,
+                         [Ann.ACCY_ADDR, anns])
             if addr == self.highlight_addr:
-                self.put(ss, self.dcc_ss[i], self.out_ann, [Ann.HIGHLIGHT_ADDR, anns])
+                self.put(ss, self.dcc_ss[i], self.out_ann,
+                         [Ann.HIGHLIGHT_ADDR, anns])
             return (i, addr, 'BASIC_ACCY' if is_basic else 'EXT_ACCY')
 
         # Extended loco addresses 1-10239
@@ -666,30 +748,40 @@ class Decoder(srd.Decoder):
             a7_0 = self.dcc_bytes[1]
             addr = a13_8 | a7_0
             anns = ['Extended Loco={}'.format(addr), 'Loco={}'.format(addr)]
-            self.put(ss, self.dcc_ss[i], self.out_ann,
-                     [Ann.LOCO_ADDR, ['Extended Loco={}'.format(addr), 'Loco={}'.format(addr), '{}'.format(addr)]])
+            self.put(ss, self.dcc_ss[i], self.out_ann, [
+                Ann.LOCO_ADDR,
+                [
+                    'Extended Loco={}'.format(addr), 'Loco={}'.format(addr),
+                    '{}'.format(addr)
+                ]
+            ])
             if addr == self.highlight_addr:
-                self.put(ss, self.dcc_ss[i], self.out_ann, [Ann.HIGHLIGHT_ADDR, anns])
+                self.put(ss, self.dcc_ss[i], self.out_ann,
+                         [Ann.HIGHLIGHT_ADDR, anns])
             return (i, addr, 'EXT_LOCO')
 
         # Reserved addresses
         elif self.dcc_bytes[0] <= 252:
-            self.put(ss, self.dcc_ss[i], self.out_ann, [Ann.RESERVED_ADDRESS, ['Reserved', 'R']])
+            self.put(ss, self.dcc_ss[i], self.out_ann,
+                     [Ann.RESERVED_ADDRESS, ['Reserved', 'R']])
             return (i, self.dcc_bytes[0], 'RESERVED')
 
         # Data transfer address
         elif self.dcc_bytes[0] <= 253:
-            self.put(ss, self.dcc_ss[i], self.out_ann, [Ann.DATA_TRANSFER_ADDR, ['Data Transfer', 'DT']])
+            self.put(ss, self.dcc_ss[i], self.out_ann,
+                     [Ann.DATA_TRANSFER_ADDR, ['Data Transfer', 'DT']])
             return (i, self.dcc_bytes[0], 'DATA_TRANSFER')
 
         # Automatic logon address
         elif self.dcc_bytes[0] <= 254:
-            self.put(ss, self.dcc_ss[i], self.out_ann, [Ann.AUTOMATIC_LOGON_ADDR, ['Automatic Logon', 'Logon']])
+            self.put(ss, self.dcc_ss[i], self.out_ann,
+                     [Ann.AUTOMATIC_LOGON_ADDR, ['Automatic Logon', 'Logon']])
             return (i, self.dcc_bytes[0], 'AUTOMATIC_LOGON')
 
         # Idle
         else:
-            self.put(ss, self.dcc_ss[i], self.out_ann, [Ann.IDLE_ADDR, ['Idle']])
+            self.put(ss, self.dcc_ss[i], self.out_ann,
+                     [Ann.IDLE_ADDR, ['Idle']])
             return (i, self.dcc_bytes[0], 'IDLE')
 
     def annotate_dcc_instr(self, i):
@@ -698,12 +790,15 @@ class Decoder(srd.Decoder):
             if self.dcc_bytes[-1] & 0b10000000:
                 i = self.annotate_dcc_instr_basic_accessory_decoder_control(i)
             else:
-                i = self.annotate_dcc_instr_nop_for_basic_and_extended_accessory(i)
+                i = self.annotate_dcc_instr_nop_for_basic_and_extended_accessory(
+                    i)
         elif self.dcc_addr_type == 'EXT_ACCY':
             if self.dcc_bytes[-1] & 0b1000:
-                i = self.annotate_dcc_instr_nop_for_basic_and_extended_accessory(i)
+                i = self.annotate_dcc_instr_nop_for_basic_and_extended_accessory(
+                    i)
             else:
-                i = self.annotate_dcc_instr_extended_accessory_decoder_control(i)
+                i = self.annotate_dcc_instr_extended_accessory_decoder_control(
+                    i)
         else:
             i = self.annotate_dcc_frame_start_bit(i)
             self.annotate_frame_instr(i)
@@ -712,7 +807,8 @@ class Decoder(srd.Decoder):
             if self.dcc_addr_type in ('BROADCAST', 'BASIC_LOCO', 'EXT_LOCO'):
                 instr = decode_instruction(self.dcc_bytes[-1])
                 if instr == self.highlight_instr.upper().replace(' ', '_'):
-                    self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                    self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT],
+                             self.out_ann,
                              [Ann.HIGHLIGHT_INSTR, [self.highlight_instr]])
                 if instr == 'UNKNOWN_SERVICE':
                     pass
@@ -755,40 +851,56 @@ class Decoder(srd.Decoder):
         '''Annotate DCC 'Decoder Control' instructions.'''
         instr = self.dcc_bytes[-1]
         if instr == 0b00000000:
-            i = self.annotate_dcc_instr_decoder_control_digital_decoder_reset(i)
+            i = self.annotate_dcc_instr_decoder_control_digital_decoder_reset(
+                i)
         elif instr == 0b00000001:
             i = self.annotate_dcc_instr_decoder_control_hard_reset(i)
         elif instr in (0b00000010, 0b00000011):
             i = self.annotate_dcc_instr_decoder_control_factory_test(i)
         elif instr in (0b00001010, 0b00001011):
-            i = self.annotate_dcc_instr_decoder_control_set_advanced_addressing(i)
+            i = self.annotate_dcc_instr_decoder_control_set_advanced_addressing(
+                i)
         elif instr == 0b00001111:
-            i = self.annotate_dcc_instr_decoder_control_decoder_acknowledgement_request(i)
+            i = self.annotate_dcc_instr_decoder_control_decoder_acknowledgement_request(
+                i)
         return i
 
     def annotate_dcc_instr_decoder_control_digital_decoder_reset(self, i):
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Decoder Control - Digital Decoder Reset', 'Digital Decoder Reset']])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            [
+                'Decoder Control - Digital Decoder Reset',
+                'Digital Decoder Reset'
+            ]
+        ])
         self.service_mode = True
         return i + BYTE_HBIT
 
     def annotate_dcc_instr_decoder_control_hard_reset(self, i):
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Decoder Control - Hard Reset', 'Hard Reset']])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['Decoder Control - Hard Reset', 'Hard Reset']
+        ])
         return i + BYTE_HBIT
 
     def annotate_dcc_instr_decoder_control_factory_test(self, i):
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Decoder Control - Factory Test', 'Factory Test']])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['Decoder Control - Factory Test', 'Factory Test']
+        ])
         i += BYTE_HBIT
         while i < len(self.dcc_hbits) - BIT_HBIT - BYTE_HBIT - BIT_HBIT:
             i = self.annotate_dcc_frame_start_bit(i)
             self.annotate_frame_instr(i)
             self.dcc_bytes.append(self.get_dcc_byte_at(i))
-            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
-                self.get_ann_instr(),
-                ['Data=0x{:02X}'.format(self.dcc_bytes[-1]), 'D=0x{:02X}'.format(self.dcc_bytes[-1])]
-            ])
+            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [
+                         self.get_ann_instr(),
+                         [
+                             'Data=0x{:02X}'.format(self.dcc_bytes[-1]),
+                             'D=0x{:02X}'.format(self.dcc_bytes[-1])
+                         ]
+                     ])
             i = self.annotate_dcc_byte(i)
         return i
 
@@ -797,18 +909,21 @@ class Decoder(srd.Decoder):
         self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
             self.get_ann_instr(),
             [
-                'Decoder Control - Set Advanced Addressing (CV29:5={})'.format(d),
-                'Set Advanced Addressing (CV29:5={})'.format(d), 'CV29:5={}'.format(d)
+                'Decoder Control - Set Advanced Addressing (CV29:5={})'.format(
+                    d), 'Set Advanced Addressing (CV29:5={})'.format(d),
+                'CV29:5={}'.format(d)
             ]
         ])
         return i + BYTE_HBIT
 
-    def annotate_dcc_instr_decoder_control_decoder_acknowledgement_request(self, i):
+    def annotate_dcc_instr_decoder_control_decoder_acknowledgement_request(
+            self, i):
         self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
             self.get_ann_instr(),
             [
-                'Decoder Control - Decoder Acknowledgement Request', 'Decoder Acknowledgement Request',
-                'Acknowledgement Request', 'ACK Request'
+                'Decoder Control - Decoder Acknowledgement Request',
+                'Decoder Acknowledgement Request', 'Acknowledgement Request',
+                'ACK Request'
             ]
         ])
         return i + BYTE_HBIT
@@ -822,8 +937,10 @@ class Decoder(srd.Decoder):
 
     def annotate_dcc_instr_consist_control_set_consist_address(self, i):
         # Instruction
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Consist Control - Set Consist Address', 'Set Consist Address']])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['Consist Control - Set Consist Address', 'Set Consist Address']
+        ])
         i += BYTE_HBIT
         # CV19
         r = self.dcc_bytes[-1] & 0b1
@@ -831,8 +948,13 @@ class Decoder(srd.Decoder):
         self.annotate_frame_instr(i)
         self.dcc_bytes.append(self.get_dcc_byte_at(i))
         addr = self.dcc_bytes[-1] & 0x7F
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Reversed={} | Address={}'.format(r, addr), 'R={} | A={}'.format(r, addr)]])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            [
+                'Reversed={} | Address={}'.format(r, addr),
+                'R={} | A={}'.format(r, addr)
+            ]
+        ])
         i = self.annotate_dcc_byte(i)
         return i
 
@@ -840,20 +962,28 @@ class Decoder(srd.Decoder):
         '''Annotate DCC 'Advanced Operations' instructions.'''
         instr = self.dcc_bytes[-1]
         if instr == 0b00111100:
-            i = self.annotate_dcc_instr_advanced_operations_speed_direction_and_function(i)
+            i = self.annotate_dcc_instr_advanced_operations_speed_direction_and_function(
+                i)
         elif instr == 0b00111101:
-            i = self.annotate_dcc_instr_advanced_operations_analog_function_group(i)
+            i = self.annotate_dcc_instr_advanced_operations_analog_function_group(
+                i)
         elif instr == 0b00111110:
-            i = self.annotate_dcc_instr_advanced_operations_special_operating_modes(i)
+            i = self.annotate_dcc_instr_advanced_operations_special_operating_modes(
+                i)
         elif instr == 0b00111111:
-            i = self.annotate_dcc_instr_advanced_operations_128_speed_step_control(i)
+            i = self.annotate_dcc_instr_advanced_operations_128_speed_step_control(
+                i)
         return i
 
-    def annotate_dcc_instr_advanced_operations_speed_direction_and_function(self, i):
+    def annotate_dcc_instr_advanced_operations_speed_direction_and_function(
+            self, i):
         # Instruction
         self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
             self.get_ann_instr(),
-            ['Advanced Operations - Speed, Direction and Functions', 'Speed, Direction and Functions', 'SDF']
+            [
+                'Advanced Operations - Speed, Direction and Functions',
+                'Speed, Direction and Functions', 'SDF'
+            ]
         ])
         i += BYTE_HBIT
         # RGGGGGGG
@@ -864,54 +994,80 @@ class Decoder(srd.Decoder):
         speed = decode_rggggggg(self.dcc_bytes[-1])
         self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
             self.get_ann_instr(),
-            ['Direction={} | Speed={}/128'.format(dir, speed), 'D={} | S={}/128'.format(dir, speed)]
+            [
+                'Direction={} | Speed={}/128'.format(dir, speed),
+                'D={} | S={}/128'.format(dir, speed)
+            ]
         ])
         i = self.annotate_dcc_byte(i)
         # Functions (max. 4)
-        byte_count = min(((len(self.dcc_hbits) - i) // (BIT_HBIT + BYTE_HBIT)) - 1, 4)
+        byte_count = min(
+            ((len(self.dcc_hbits) - i) // (BIT_HBIT + BYTE_HBIT)) - 1, 4)
         for j in range(byte_count):
             i = self.annotate_dcc_frame_start_bit(i)
             self.annotate_frame_instr(i)
             self.dcc_bytes.append(self.get_dcc_byte_at(i))
             f = [(self.dcc_bytes[-1] >> bit) & 0b1 for bit in range(8)]
-            fstr = ' | '.join('F{}={}'.format(j * 8 + i, f[i]) for i in range(8))
-            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [self.get_ann_instr(), [fstr]])
+            fstr = ' | '.join('F{}={}'.format(j * 8 + i, f[i])
+                              for i in range(8))
+            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), [fstr]])
             i = self.annotate_dcc_byte(i)
         return i
 
     def annotate_dcc_instr_advanced_operations_analog_function_group(self, i):
         # Instruction
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Advanced Operations - Analog Function Group', 'Analog Function Group']])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            [
+                'Advanced Operations - Analog Function Group',
+                'Analog Function Group'
+            ]
+        ])
         i += BYTE_HBIT
         # Analog channel
         i = self.annotate_dcc_frame_start_bit(i)
         self.annotate_frame_instr(i)
         self.dcc_bytes.append(self.get_dcc_byte_at(i))
         ch = decode_ssssssss(self.dcc_bytes[-1])
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Channel={}'.format(ch), 'CH={}'.format(ch)]])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['Channel={}'.format(ch), 'CH={}'.format(ch)]
+        ])
         i = self.annotate_dcc_byte(i)
         # Analog data
         i = self.annotate_dcc_frame_start_bit(i)
         self.annotate_frame_instr(i)
         self.dcc_bytes.append(self.get_dcc_byte_at(i))
         data = self.dcc_bytes[-1]
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Data={}'.format(data), 'D={}'.format(data)]])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['Data={}'.format(data), 'D={}'.format(data)]
+        ])
         i = self.annotate_dcc_byte(i)
         return i
 
-    def annotate_dcc_instr_advanced_operations_special_operating_modes(self, i):
+    def annotate_dcc_instr_advanced_operations_special_operating_modes(
+            self, i):
         # Instruction
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Advanced Operations - Special Operating Modes', 'Special Operating Modes']])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            [
+                'Advanced Operations - Special Operating Modes',
+                'Special Operating Modes'
+            ]
+        ])
         i += BYTE_HBIT
         # Bits
         i = self.annotate_dcc_frame_start_bit(i)
         self.annotate_frame_instr(i)
         self.dcc_bytes.append(self.get_dcc_byte_at(i))
-        consist_map = {0b00: 'Not Part', 0b10: 'Leading', 0b01: 'Middle', 0b11: 'Rear'}
+        consist_map = {
+            0b00: 'Not Part',
+            0b10: 'Leading',
+            0b01: 'Middle',
+            0b11: 'Rear'
+        }
         consist = consist_map.get((self.dcc_bytes[-1] >> 2) & 0b11, 'Unknown')
         shunting = (self.dcc_bytes[-1] >> 4) & 0b1
         west = (self.dcc_bytes[-1] >> 5) & 0b1
@@ -920,16 +1076,23 @@ class Decoder(srd.Decoder):
         self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
             self.get_ann_instr(),
             [
-                'Consist={} | Shunting={} | West={} | East={} | MAN={}'.format(consist, shunting, west, east, man),
-                'C={} | S={} | W={} | E={} | M={}'.format(consist, shunting, west, east, man)
+                'Consist={} | Shunting={} | West={} | East={} | MAN={}'.format(
+                    consist, shunting, west, east, man),
+                'C={} | S={} | W={} | E={} | M={}'.format(
+                    consist, shunting, west, east, man)
             ]
         ])
         i = self.annotate_dcc_byte(i)
         return i
 
     def annotate_dcc_instr_advanced_operations_128_speed_step_control(self, i):
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Advanced Operations - 128 Speed Step Control', '128 Speed Step Control']])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            [
+                'Advanced Operations - 128 Speed Step Control',
+                '128 Speed Step Control'
+            ]
+        ])
         i += BYTE_HBIT
         i = self.annotate_dcc_frame_start_bit(i)
         self.annotate_frame_instr(i)
@@ -938,7 +1101,10 @@ class Decoder(srd.Decoder):
         speed = decode_rggggggg(self.dcc_bytes[-1])
         self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
             self.get_ann_instr(),
-            ['Direction={} | Speed={}/128'.format(dir, speed), 'D={} | S={}/128'.format(dir, speed)]
+            [
+                'Direction={} | Speed={}/128'.format(dir, speed),
+                'D={} | S={}/128'.format(dir, speed)
+            ]
         ])
         i = self.annotate_dcc_byte(i)
         return i
@@ -948,23 +1114,29 @@ class Decoder(srd.Decoder):
         dir = (self.dcc_bytes[-1] >> 5) & 0b1
         speed = decode_rggggg(self.dcc_bytes[-1], self.cv29_1)
         if self.cv29_1:
-            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
-                self.get_ann_instr(),
-                [
-                    'Speed and Direction: Direction={} | Speed={}/28'.format(dir, speed),
-                    'Direction={} | Speed={}/28'.format(dir, speed), 'D={} | S={}/28'.format(dir, speed)
-                ]
-            ])
+            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [
+                         self.get_ann_instr(),
+                         [
+                             'Speed and Direction: Direction={} | Speed={}/28'.
+                             format(dir, speed),
+                             'Direction={} | Speed={}/28'.format(dir, speed),
+                             'D={} | S={}/28'.format(dir, speed)
+                         ]
+                     ])
         else:
             f0 = (self.dcc_bytes[-1] >> 4) & 0b1
-            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
-                self.get_ann_instr(),
-                [
-                    'Speed and Direction: Direction={} | Speed={}/14 F0={}'.format(dir, speed, f0),
-                    'Direction={} | Speed={}/14 F0={}'.format(dir, speed, f0), 'D={} | S={}/14 | F0={}'.format(
-                        dir, speed, f0)
-                ]
-            ])
+            self.put(
+                self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                    self.get_ann_instr(),
+                    [
+                        'Speed and Direction: Direction={} | Speed={}/14 F0={}'
+                        .format(dir, speed, f0),
+                        'Direction={} | Speed={}/14 F0={}'.format(
+                            dir, speed, f0), 'D={} | S={}/14 | F0={}'.format(
+                                dir, speed, f0)
+                    ]
+                ])
         return i + BYTE_HBIT
 
     def annotate_dcc_instr_function_group(self, i):
@@ -985,40 +1157,51 @@ class Decoder(srd.Decoder):
         f4 = (self.dcc_bytes[-1] >> 3) & 0b1
         if self.cv29_1:
             f0 = (self.dcc_bytes[-1] >> 4) & 0b1
-            fstr = 'F0={} | F1={} | F2={} | F3={} | F4={}'.format(f0, f1, f2, f3, f4)
+            fstr = 'F0={} | F1={} | F2={} | F3={} | F4={}'.format(
+                f0, f1, f2, f3, f4)
             self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                     [self.get_ann_instr(), ['Function Group - F0-F4: ' + fstr, fstr]])
+                     [
+                         self.get_ann_instr(),
+                         ['Function Group - F0-F4: ' + fstr, fstr]
+                     ])
         else:
             fstr = 'F1={} | F2={} | F3={} | F4={}'.format(f1, f2, f3, f4)
             self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                     [self.get_ann_instr(), ['Function Group - F0-F4: ' + fstr, fstr]])
+                     [
+                         self.get_ann_instr(),
+                         ['Function Group - F0-F4: ' + fstr, fstr]
+                     ])
         return i + BYTE_HBIT
 
     def annotate_dcc_instr_function_group_f9_f12(self, i):
         f9_12 = [(self.dcc_bytes[-1] >> bit) & 0b1 for bit in range(4)]
         fstr = ' | '.join('F{}={}'.format(9 + i, f9_12[i]) for i in range(4))
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Function Group - F9-F12: ' + fstr, fstr]])
+        self.put(
+            self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+            [self.get_ann_instr(), ['Function Group - F9-F12: ' + fstr, fstr]])
         return i + BYTE_HBIT
 
     def annotate_dcc_instr_function_group_f5_f8(self, i):
         f5_8 = [(self.dcc_bytes[-1] >> bit) & 0b1 for bit in range(4)]
         fstr = ' | '.join('F{}={}'.format(5 + i, f5_8[i]) for i in range(4))
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Function Group - F5-F8: ' + fstr, fstr]])
+        self.put(
+            self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+            [self.get_ann_instr(), ['Function Group - F5-F8: ' + fstr, fstr]])
         return i + BYTE_HBIT
 
     def annotate_dcc_instr_feature_expansion(self, i):
         '''Annotate DCC 'Feature Expansion' instructions.'''
         instr = self.dcc_bytes[-1]
         if instr == 0b11000000:
-            i = self.annotate_dcc_instr_feature_expansion_binary_state_control_long_form(i)
+            i = self.annotate_dcc_instr_feature_expansion_binary_state_control_long_form(
+                i)
         elif instr == 0b11000001:
             i = self.annotate_dcc_instr_feature_expansion_time_and_date(i)
         elif instr == 0b11000010:
             i = self.annotate_dcc_instr_feature_expansion_system_time(i)
         elif instr == 0b11000011:
-            i = self.annotate_dcc_instr_feature_expansion_command_station_feature_identification(i)
+            i = self.annotate_dcc_instr_feature_expansion_command_station_feature_identification(
+                i)
         elif instr == 0b11011000:
             i = self.annotate_dcc_instr_feature_expansion_f29_f36(i)
         elif instr == 0b11011001:
@@ -1030,18 +1213,23 @@ class Decoder(srd.Decoder):
         elif instr == 0b11011100:
             i = self.annotate_dcc_instr_feature_expansion_f61_f68(i)
         elif instr == 0b11011101:
-            i = self.annotate_dcc_instr_feature_expansion_binary_state_control_short_form(i)
+            i = self.annotate_dcc_instr_feature_expansion_binary_state_control_short_form(
+                i)
         elif instr == 0b11011110:
             i = self.annotate_dcc_instr_feature_expansion_f13_f20(i)
         elif instr == 0b11011111:
             i = self.annotate_dcc_instr_feature_expansion_f21_f28(i)
         return i
 
-    def annotate_dcc_instr_feature_expansion_binary_state_control_long_form(self, i):
+    def annotate_dcc_instr_feature_expansion_binary_state_control_long_form(
+            self, i):
         # Instruction
         self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
             self.get_ann_instr(),
-            ['Feature Expansion - Binary State Control Long Form', 'Binary State Control Long Form']
+            [
+                'Feature Expansion - Binary State Control Long Form',
+                'Binary State Control Long Form'
+            ]
         ])
         i += BYTE_HBIT
         # Low byte
@@ -1056,15 +1244,19 @@ class Decoder(srd.Decoder):
         self.dcc_bytes.append(self.get_dcc_byte_at(i))
         d = self.dcc_bytes[-2] >> 7
         addr = (self.dcc_bytes[-1] << 7) | (self.dcc_bytes[-2] & 0x7F)
-        self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['State {}={}'.format(addr, d), 'S {}={}'.format(addr, d)]])
+        self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['State {}={}'.format(addr, d), 'S {}={}'.format(addr, d)]
+        ])
         i = self.annotate_dcc_byte(i)
         return i
 
     def annotate_dcc_instr_feature_expansion_time_and_date(self, i):
         # Instruction
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Feature Expansion - Time and Date', 'Time and Date']])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['Feature Expansion - Time and Date', 'Time and Date']
+        ])
         i += BYTE_HBIT
         # Minutes or day
         i = self.annotate_dcc_frame_start_bit(i)
@@ -1084,7 +1276,10 @@ class Decoder(srd.Decoder):
         cc = self.dcc_bytes[-3] >> 6
         if cc == 0b00:
             minutes = self.dcc_bytes[-3] & 0b00111111
-            weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'Not Supported']
+            weekdays = [
+                'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
+                'Saturday', 'Sunday', 'Not Supported'
+            ]
             weekday = weekdays[self.dcc_bytes[-2] >> 5]
             hours = self.dcc_bytes[-2] & 0b00011111
             update = self.dcc_bytes[-1] >> 7
@@ -1092,27 +1287,35 @@ class Decoder(srd.Decoder):
             self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
                 self.get_ann_instr(),
                 [
-                    '{} {}:{} | Update={} | Acceleration={}'.format(weekday, hours, minutes, update, acc),
-                    '{} {}:{} | U={} | Acc={}'.format(weekday, hours, minutes, update, acc)
+                    '{} {}:{} | Update={} | Acceleration={}'.format(
+                        weekday, hours, minutes, update,
+                        acc), '{} {}:{} | U={} | Acc={}'.format(
+                            weekday, hours, minutes, update, acc)
                 ]
             ])
         elif cc == 0b01:
             day = self.dcc_bytes[-3] & 0b00011111
             month = self.dcc_bytes[-2] >> 4
             year = (self.dcc_bytes[-2] & 0x0F) << 8 | self.dcc_bytes[-1]
-            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                     [self.get_ann_instr(), ['{}/{}/{}'.format(day, month, year)]])
+            self.put(
+                ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                [self.get_ann_instr(), ['{}/{}/{}'.format(day, month, year)]])
         elif cc == 0b10:
-            scale = float16_to_float(self.dcc_bytes[-2] << 8 | self.dcc_bytes[-1])
-            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                     [self.get_ann_instr(), ['Scale={:.2f}'.format(scale), 'S={:.2f}'.format(scale)]])
+            scale = float16_to_float(self.dcc_bytes[-2] << 8
+                                     | self.dcc_bytes[-1])
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                self.get_ann_instr(),
+                ['Scale={:.2f}'.format(scale), 'S={:.2f}'.format(scale)]
+            ])
         i = self.annotate_dcc_byte(i)
         return i
 
     def annotate_dcc_instr_feature_expansion_system_time(self, i):
         # Instruction
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Feature Expansion - System Time', 'System Time']])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['Feature Expansion - System Time', 'System Time']
+        ])
         i += BYTE_HBIT
         # High byte
         i = self.annotate_dcc_frame_start_bit(i)
@@ -1125,16 +1328,22 @@ class Decoder(srd.Decoder):
         self.annotate_frame_instr(i)
         self.dcc_bytes.append(self.get_dcc_byte_at(i))
         ms = (self.dcc_bytes[-2] << 8) | self.dcc_bytes[-1]
-        self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Milliseconds={}'.format(ms), 'ms={}'.format(ms)]])
+        self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['Milliseconds={}'.format(ms), 'ms={}'.format(ms)]
+        ])
         i = self.annotate_dcc_byte(i)
         return i
 
-    def annotate_dcc_instr_feature_expansion_command_station_feature_identification(self, i):
+    def annotate_dcc_instr_feature_expansion_command_station_feature_identification(
+            self, i):
         # Instruction
         self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
             self.get_ann_instr(),
-            ['Feature Expansion - Command Station Feature Identification', 'Command Station Feature Identification']
+            [
+                'Feature Expansion - Command Station Feature Identification',
+                'Command Station Feature Identification'
+            ]
         ])
         i += BYTE_HBIT
         # Type
@@ -1162,10 +1371,13 @@ class Decoder(srd.Decoder):
         self.dcc_bytes.append(self.get_dcc_byte_at(i))
         bitmask = self.dcc_bytes[-2] << 8 | self.dcc_bytes[-1] << 0
         if iiii == 0b1111:
-            fstr = 'Basic Addresses 100-127 as Extended={} | '.format((bitmask >> 0) & 0b1)
-            fstr += 'Extended Addresses 10000-10239={} | '.format((bitmask >> 1) & 0b1)
+            fstr = 'Basic Addresses 100-127 as Extended={} | '.format(
+                (bitmask >> 0) & 0b1)
+            fstr += 'Extended Addresses 10000-10239={} | '.format(
+                (bitmask >> 1) & 0b1)
             fstr += '128 Speed Steps={} | '.format((bitmask >> 2) & 0b1)
-            fstr += 'Speed, Direction and Functions={} | '.format((bitmask >> 3) & 0b1)
+            fstr += 'Speed, Direction and Functions={} | '.format(
+                (bitmask >> 3) & 0b1)
             fstr += 'POM Write={} | '.format((bitmask >> 4) & 0b1)
             fstr += 'XPOM Write={} | '.format((bitmask >> 5) & 0b1)
             fstr += 'F13-F28={} | '.format((bitmask >> 8) & 0b1)
@@ -1174,7 +1386,8 @@ class Decoder(srd.Decoder):
             fstr += 'Binary State Long={} | '.format((bitmask >> 11) & 0b1)
             fstr += 'Analog Function={} | '.format((bitmask >> 12) & 0b1)
             fstr += 'Special Operating Modes={}'.format((bitmask >> 13) & 0b1)
-            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [self.get_ann_instr(), [fstr]])
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), [fstr]])
         elif iiii == 0b1110:
             fstr = 'Addresses Offset by 4={} | '.format((bitmask >> 0) & 0b1)
             fstr += 'Extended={} | '.format((bitmask >> 1) & 0b1)
@@ -1183,44 +1396,59 @@ class Decoder(srd.Decoder):
             fstr += 'Date={} | '.format((bitmask >> 9) & 0b1)
             fstr += 'Time Scale={} | '.format((bitmask >> 10) & 0b1)
             fstr += 'System Time={}'.format((bitmask >> 11) & 0b1)
-            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [self.get_ann_instr(), [fstr]])
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), [fstr]])
         elif iiii == 0b1101:
             fstr = 'RailCom={} | '.format((bitmask >> 0) & 0b1)
             fstr += 'DCC-A={} | '.format((bitmask >> 1) & 0b1)
             fstr += 'NOP for Accessories={} | '.format((bitmask >> 2) & 0b1)
             fstr += 'POM Read={} | '.format((bitmask >> 3) & 0b1)
             fstr += 'XPOM Read={} | '.format((bitmask >> 4) & 0b1)
-            fstr += 'app:dyn Container Levels={} | '.format((bitmask >> 8) & 0b1)
-            fstr += 'app:dyn Operating Parameters={} | '.format((bitmask >> 9) & 0b1)
+            fstr += 'app:dyn Container Levels={} | '.format((bitmask >> 8)
+                                                            & 0b1)
+            fstr += 'app:dyn Operating Parameters={} | '.format((bitmask >> 9)
+                                                                & 0b1)
             fstr += 'app:dyn Track Voltage={} | '.format((bitmask >> 10) & 0b1)
             fstr += 'RailCom+={}'.format((bitmask >> 15) & 0b1)
-            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [self.get_ann_instr(), [fstr]])
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), [fstr]])
         else:
-            fstr = ' | '.join('Bit{}={}'.format(i, (bitmask & (1 << i)) >> i) for i in range(16))
-            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [self.get_ann_instr(), [fstr]])
+            fstr = ' | '.join('Bit{}={}'.format(i, (bitmask & (1 << i)) >> i)
+                              for i in range(16))
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), [fstr]])
         i = self.annotate_dcc_byte(i)
         return i
 
     def annotate_dcc_instr_feature_expansion_f29_f36(self, i):
-        return self.instr_feature_expansion_fxx_fyy_annotate_dcc_helper(i, 29, 36)
+        return self.instr_feature_expansion_fxx_fyy_annotate_dcc_helper(
+            i, 29, 36)
 
     def annotate_dcc_instr_feature_expansion_f37_f44(self, i):
-        return self.instr_feature_expansion_fxx_fyy_annotate_dcc_helper(i, 37, 44)
+        return self.instr_feature_expansion_fxx_fyy_annotate_dcc_helper(
+            i, 37, 44)
 
     def annotate_dcc_instr_feature_expansion_f45_f52(self, i):
-        return self.instr_feature_expansion_fxx_fyy_annotate_dcc_helper(i, 45, 52)
+        return self.instr_feature_expansion_fxx_fyy_annotate_dcc_helper(
+            i, 45, 52)
 
     def annotate_dcc_instr_feature_expansion_f53_f60(self, i):
-        return self.instr_feature_expansion_fxx_fyy_annotate_dcc_helper(i, 53, 60)
+        return self.instr_feature_expansion_fxx_fyy_annotate_dcc_helper(
+            i, 53, 60)
 
     def annotate_dcc_instr_feature_expansion_f61_f68(self, i):
-        return self.instr_feature_expansion_fxx_fyy_annotate_dcc_helper(i, 61, 68)
+        return self.instr_feature_expansion_fxx_fyy_annotate_dcc_helper(
+            i, 61, 68)
 
-    def annotate_dcc_instr_feature_expansion_binary_state_control_short_form(self, i):
+    def annotate_dcc_instr_feature_expansion_binary_state_control_short_form(
+            self, i):
         # Instruction
         self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
             self.get_ann_instr(),
-            ['Feature Expansion - Binary State Control Short Form', 'Binary State Control Short Form']
+            [
+                'Feature Expansion - Binary State Control Short Form',
+                'Binary State Control Short Form'
+            ]
         ])
         i += BYTE_HBIT
         # State
@@ -1229,16 +1457,20 @@ class Decoder(srd.Decoder):
         self.dcc_bytes.append(self.get_dcc_byte_at(i))
         d = self.dcc_bytes[-1] >> 7
         addr = self.dcc_bytes[-1] & 0x7F
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['State {}={}'.format(addr, d), 'S {}={}'.format(addr, d)]])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['State {}={}'.format(addr, d), 'S {}={}'.format(addr, d)]
+        ])
         i = self.annotate_dcc_byte(i)
         return i
 
     def annotate_dcc_instr_feature_expansion_f13_f20(self, i):
-        return self.instr_feature_expansion_fxx_fyy_annotate_dcc_helper(i, 13, 20)
+        return self.instr_feature_expansion_fxx_fyy_annotate_dcc_helper(
+            i, 13, 20)
 
     def annotate_dcc_instr_feature_expansion_f21_f28(self, i):
-        return self.instr_feature_expansion_fxx_fyy_annotate_dcc_helper(i, 21, 28)
+        return self.instr_feature_expansion_fxx_fyy_annotate_dcc_helper(
+            i, 21, 28)
 
     def annotate_dcc_instr_cv_access(self, i):
         '''Annotate DCC 'CV Access' instructions.'''
@@ -1252,8 +1484,9 @@ class Decoder(srd.Decoder):
 
     def annotate_dcc_instr_cv_access_long_form(self, i):
         # Instruction
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['CV Access - Long Form', 'CV Access']])
+        self.put(
+            self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+            [self.get_ann_instr(), ['CV Access - Long Form', 'CV Access']])
         i += BYTE_HBIT
         # CV address
         i = self.annotate_dcc_frame_start_bit(i)
@@ -1269,31 +1502,39 @@ class Decoder(srd.Decoder):
         cv_addr = (self.dcc_bytes[-3] & 0b11) << 8 | self.dcc_bytes[-2]
         # Reserved
         if kk == 0b00:
-            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [self.get_ann_instr(), ['Reserved']])
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), ['Reserved']])
         # Verify
         elif kk == 0b01:
             cv_value = self.dcc_bytes[-1]
-            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                     [self.get_ann_instr(), ['Verify CV{}={}'.format(cv_addr + 1, cv_value)]])
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                self.get_ann_instr(),
+                ['Verify CV{}={}'.format(cv_addr + 1, cv_value)]
+            ])
         # Write
         elif kk == 0b11:
             cv_value = self.dcc_bytes[-1]
-            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                     [self.get_ann_instr(), ['Write CV{}={}'.format(cv_addr + 1, cv_value)]])
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                self.get_ann_instr(),
+                ['Write CV{}={}'.format(cv_addr + 1, cv_value)]
+            ])
         # Bit manipulation
         elif kk == 0b10:
             k = 'Write' if self.dcc_bytes[-1] & 0b10000 else 'Verify'
             d = (self.dcc_bytes[-1] >> 3) & 0b1
             bbb = self.dcc_bytes[-1] & 0b111
-            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                     [self.get_ann_instr(), ['{} CV{}:{}={}'.format(k, cv_addr + 1, bbb, d)]])
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                self.get_ann_instr(),
+                ['{} CV{}:{}={}'.format(k, cv_addr + 1, bbb, d)]
+            ])
         i = self.annotate_dcc_byte(i)
         return i
 
     def annotate_dcc_instr_cv_access_short_form(self, i):
         # Instruction
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['CV Access - Short Form', 'CV Access']])
+        self.put(
+            self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+            [self.get_ann_instr(), ['CV Access - Short Form', 'CV Access']])
         i += BYTE_HBIT
         # KKKK
         kkkk = self.dcc_bytes[-1] & 0x0F
@@ -1304,12 +1545,16 @@ class Decoder(srd.Decoder):
         self.dcc_bytes.append(self.get_dcc_byte_at(i))
         # CV23
         if kkkk == 0b0010:
-            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                     [self.get_ann_instr(), ['Write CV23={}'.format(self.dcc_bytes[-1])]])
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                self.get_ann_instr(),
+                ['Write CV23={}'.format(self.dcc_bytes[-1])]
+            ])
         # CV24
         elif kkkk == 0b0011:
-            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                     [self.get_ann_instr(), ['Write CV24={}'.format(self.dcc_bytes[-1])]])
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                self.get_ann_instr(),
+                ['Write CV24={}'.format(self.dcc_bytes[-1])]
+            ])
         # CV17/18, CV31/32 or CV19/20
         elif kkkk in (0b0100, 0b0101, 0b0110):
             i = self.annotate_dcc_byte(i)
@@ -1319,25 +1564,39 @@ class Decoder(srd.Decoder):
             self.dcc_bytes.append(self.get_dcc_byte_at(i))
             # CV17/18
             if kkkk == 0b0100:
-                self.put(
-                    ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                    [self.get_ann_instr(), ['Write CV17={} | CV18={}'.format(self.dcc_bytes[-2], self.dcc_bytes[-1])]])
+                self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                    self.get_ann_instr(),
+                    [
+                        'Write CV17={} | CV18={}'.format(
+                            self.dcc_bytes[-2], self.dcc_bytes[-1])
+                    ]
+                ])
             # CV31/32
             elif kkkk == 0b0101:
-                self.put(
-                    ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                    [self.get_ann_instr(), ['Write CV31={} | CV32={}'.format(self.dcc_bytes[-2], self.dcc_bytes[-1])]])
+                self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                    self.get_ann_instr(),
+                    [
+                        'Write CV31={} | CV32={}'.format(
+                            self.dcc_bytes[-2], self.dcc_bytes[-1])
+                    ]
+                ])
             # CV19/20
             elif kkkk == 0b0110:
-                self.put(
-                    ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                    [self.get_ann_instr(), ['Write CV19={} | CV20={}'.format(self.dcc_bytes[-2], self.dcc_bytes[-1])]])
+                self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                    self.get_ann_instr(),
+                    [
+                        'Write CV19={} | CV20={}'.format(
+                            self.dcc_bytes[-2], self.dcc_bytes[-1])
+                    ]
+                ])
         # Deprecated
         elif kkkk == 0b1001:
-            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [self.get_ann_instr(), ['Deprecated']])
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), ['Deprecated']])
         # Forbidden
         else:
-            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [self.get_ann_instr(), ['Forbidden']])
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), ['Forbidden']])
         i = self.annotate_dcc_byte(i)
         return i
 
@@ -1371,37 +1630,47 @@ class Decoder(srd.Decoder):
         kk = (self.dcc_bytes[-4] >> 2) & 0b11
         # Reserved
         if kk == 0b00:
-            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [self.get_ann_instr(), ['Reserved']])
+            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), ['Reserved']])
             i = self.annotate_dcc_byte(i)
         # Verify
         elif kk == 0b01:
-            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
-                self.get_ann_instr(),
-                ['Verify CV{} ({})'.format(cv_offset + 1, cv_addr + 1), 'Verify CV{}'.format(cv_offset + 1)]
-            ])
+            self.put(
+                self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                    self.get_ann_instr(),
+                    [
+                        'Verify CV{} ({})'.format(cv_offset + 1, cv_addr + 1),
+                        'Verify CV{}'.format(cv_offset + 1)
+                    ]
+                ])
             i = self.annotate_dcc_byte(i)
         # Write
         elif kk == 0b11:
-            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [self.get_ann_instr(), ['Write Byte']])
+            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), ['Write Byte']])
             i = self.annotate_dcc_byte(i)
             # CV values (<=4)
-            byte_count = ((len(self.dcc_hbits) - i) // (BIT_HBIT + BYTE_HBIT)) - 1
+            byte_count = ((len(self.dcc_hbits) - i) //
+                          (BIT_HBIT + BYTE_HBIT)) - 1
             for j in range(byte_count):
                 i = self.annotate_dcc_frame_start_bit(i)
                 self.annotate_frame_instr(i)
                 self.dcc_bytes.append(self.get_dcc_byte_at(i))
                 cv_value = self.dcc_bytes[-1]
-                self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
-                    self.get_ann_instr(),
-                    [
-                        'CV{}={} ({})'.format(cv_offset + 1 + j, cv_value, cv_addr + 1 + j), 'CV{}={}'.format(
-                            cv_offset + 1 + j, cv_value)
-                    ]
-                ])
+                self.put(
+                    self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                        self.get_ann_instr(),
+                        [
+                            'CV{}={} ({})'.format(cv_offset + 1 + j, cv_value,
+                                                  cv_addr + 1 + j),
+                            'CV{}={}'.format(cv_offset + 1 + j, cv_value)
+                        ]
+                    ])
                 i = self.annotate_dcc_byte(i)
         # Bit manipulation
         elif kk == 0b10:
-            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [self.get_ann_instr(), ['Write Bit']])
+            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), ['Write Bit']])
             i = self.annotate_dcc_byte(i)
             # CV value
             i = self.annotate_dcc_frame_start_bit(i)
@@ -1409,13 +1678,15 @@ class Decoder(srd.Decoder):
             self.dcc_bytes.append(self.get_dcc_byte_at(i))
             d = (self.dcc_bytes[-1] >> 3) & 0b1
             bbb = self.dcc_bytes[-1] & 0b111
-            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
-                self.get_ann_instr(),
-                [
-                    'Write CV{}:{}={} ({})'.format(cv_offset + 1, bbb, d, cv_addr + 1), 'Write CV{}:{}={}'.format(
-                        cv_offset + 1, bbb, d)
-                ]
-            ])
+            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [
+                         self.get_ann_instr(),
+                         [
+                             'Write CV{}:{}={} ({})'.format(
+                                 cv_offset + 1, bbb, d, cv_addr + 1),
+                             'Write CV{}:{}={}'.format(cv_offset + 1, bbb, d)
+                         ]
+                     ])
             i = self.annotate_dcc_byte(i)
         return i
 
@@ -1427,8 +1698,9 @@ class Decoder(srd.Decoder):
         self.put(ss, self.dcc_ss[i], self.out_ann, [
             self.get_ann_instr(),
             [
-                'Basic Accessory={} | Pair{}={}'.format(self.dcc_addr, r, d), 'Accessory={} | P{}={}'.format(
-                    self.dcc_addr, r, d), '{} | {}={}'.format(self.dcc_addr, r, d)
+                'Basic Accessory={} | Pair{}={}'.format(self.dcc_addr, r, d),
+                'Accessory={} | P{}={}'.format(self.dcc_addr, r, d),
+                '{} | {}={}'.format(self.dcc_addr, r, d)
             ]
         ])
         return i
@@ -1441,8 +1713,10 @@ class Decoder(srd.Decoder):
         aspect = self.dcc_bytes[-1]
         r = self.dcc_bytes[-1] >> 7
         sw_time = SWITCH_TIMES[self.dcc_bytes[-1] & 0x7F]
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['Aspect={} or State={} for Time={}'.format(aspect, r, sw_time)]])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['Aspect={} or State={} for Time={}'.format(aspect, r, sw_time)]
+        ])
         i = self.annotate_dcc_byte(i)
         return i + BYTE_HBIT
 
@@ -1452,22 +1726,30 @@ class Decoder(srd.Decoder):
         if self.dcc_addr_type == 'BASIC_ACCY':
             self.put(ss, self.dcc_ss[i], self.out_ann, [
                 self.get_ann_instr(),
-                ['Basic Accessory={} NOP'.format(self.dcc_addr), 'Accessory={} NOP'.format(self.dcc_addr)]
+                [
+                    'Basic Accessory={} NOP'.format(self.dcc_addr),
+                    'Accessory={} NOP'.format(self.dcc_addr)
+                ]
             ])
         elif self.dcc_addr_type == 'EXT_ACCY':
             self.put(ss, self.dcc_ss[i], self.out_ann, [
                 self.get_ann_instr(),
-                ['Extended Accessory={} NOP'.format(self.dcc_addr), 'Accessory={} NOP'.format(self.dcc_addr)]
+                [
+                    'Extended Accessory={} NOP'.format(self.dcc_addr),
+                    'Accessory={} NOP'.format(self.dcc_addr)
+                ]
             ])
         return i
 
     def annotate_dcc_instr_data_transfer(self, i):
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [self.get_ann_instr(), ['TODO']])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                 [self.get_ann_instr(), ['TODO']])
         i += BYTE_HBIT
         return i
 
     def annotate_dcc_instr_automatic_logon(self, i):
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [self.get_ann_instr(), ['TODO']])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                 [self.get_ann_instr(), ['TODO']])
         i += BYTE_HBIT
         return i
 
@@ -1483,13 +1765,15 @@ class Decoder(srd.Decoder):
         checksum = exor(self.dcc_bytes)
         checksum_sign = '\u2718' if checksum else '\u2714'
         anns = ['Checksum ' + checksum_sign, checksum_sign]
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [Ann.FRAME_CHECKSUM, anns])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                 [Ann.FRAME_CHECKSUM, anns])
         if checksum:
             self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
                      [Ann.ERROR, ['Checksum should be {}'.format(checksum)]])
         # Eventually add empty \n to help readability for exported annotations
         anns[0] = anns[0] + self.empty_new_line_after_packets_annotation
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [self.get_ann_instr(), anns])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                 [self.get_ann_instr(), anns])
         i = self.annotate_dcc_byte(i)
         i = self.annotate_dcc_frame_endbit(i)
         return i
@@ -1514,7 +1798,8 @@ class Decoder(srd.Decoder):
             return self.reset_bidi()
 
         # Debounce
-        if (not self.bidi_edges_ss or self.ss_es2bidi_bits_passed(self.bidi_edges_ss[-1], self.samplenum) >= 1):
+        if (not self.bidi_edges_ss or self.ss_es2bidi_bits_passed(
+                self.bidi_edges_ss[-1], self.samplenum) >= 1):
             self.bidi_edges_ss.append(self.samplenum)
             self.bidi_states.append(bidi)
 
@@ -1531,7 +1816,8 @@ class Decoder(srd.Decoder):
     def annotate_bidi_bits_bytes_and_errors(self):
         '''Annotate BiDi bits, bytes and errors.'''
         # Prepend two empty bytes if channel 1 has been empty
-        if self.bidi_edges_ss[0] > self.ss_us2es(self.last_dcc_ss[-1], BIDI_TTC1):
+        if self.bidi_edges_ss[0] > self.ss_us2es(self.last_dcc_ss[-1],
+                                                 BIDI_TTC1):
             self.bidi_bytes_ss.extend([0, 0])
             self.bidi_enc_bytes.extend([0, 0])
 
@@ -1545,7 +1831,8 @@ class Decoder(srd.Decoder):
 
             while bit_count < 8 and i < edge_count - 1:
                 state = self.bidi_states[i]
-                bits_passed = self.ss_es2bidi_bits_passed(self.bidi_edges_ss[i], self.bidi_edges_ss[i + 1])
+                bits_passed = self.ss_es2bidi_bits_passed(
+                    self.bidi_edges_ss[i], self.bidi_edges_ss[i + 1])
 
                 # Skip startbit
                 if ss == self.bidi_edges_ss[i] and bits_passed >= 1:
@@ -1573,29 +1860,39 @@ class Decoder(srd.Decoder):
 
             # Start bit
             for j in range(0, 1):
-                self.put(self.ss_us2es(ss, j * BIDI_BIT_TIME), self.ss_us2es(ss, (j + 1) * BIDI_BIT_TIME), self.out_ann,
+                self.put(self.ss_us2es(ss, j * BIDI_BIT_TIME),
+                         self.ss_us2es(ss,
+                                       (j + 1) * BIDI_BIT_TIME), self.out_ann,
                          [Ann.BIDI_BIT_START, ['Start Bit', 'Start', 'S']])
 
             # Data
             for j in range(1, 9):
-                self.put(self.ss_us2es(ss, j * BIDI_BIT_TIME), self.ss_us2es(ss, (j + 1) * BIDI_BIT_TIME), self.out_ann,
-                         [Ann.BIDI_BIT, [str(1 if byte & (1 << (j - 1)) else 0)]])
+                self.put(
+                    self.ss_us2es(ss, j * BIDI_BIT_TIME),
+                    self.ss_us2es(ss, (j + 1) * BIDI_BIT_TIME), self.out_ann,
+                    [Ann.BIDI_BIT, [str(1 if byte & (1 << (j - 1)) else 0)]])
 
             # Stop bit
             for j in range(9, 10):
-                self.put(self.ss_us2es(ss, j * BIDI_BIT_TIME), self.ss_us2es(ss, (j + 1) * BIDI_BIT_TIME), self.out_ann,
+                self.put(self.ss_us2es(ss, j * BIDI_BIT_TIME),
+                         self.ss_us2es(ss,
+                                       (j + 1) * BIDI_BIT_TIME), self.out_ann,
                          [Ann.BIDI_BIT_STOP, ['Stop Bit', 'Stop', 'T']])
 
             # Byte
-            self.put(self.ss_us2es(ss, 1 * BIDI_BIT_TIME), self.ss_us2es(ss, 9 * BIDI_BIT_TIME), self.out_ann,
+            self.put(self.ss_us2es(ss, 1 * BIDI_BIT_TIME),
+                     self.ss_us2es(ss, 9 * BIDI_BIT_TIME), self.out_ann,
                      [Ann.BIDI_ENC_BYTE, ['0x{:02X}'.format(byte)]])
-            self.put(self.ss_us2es(ss, 1 * BIDI_BIT_TIME), self.ss_us2es(ss, 9 * BIDI_BIT_TIME), self.out_ann,
-                     [Ann.BIDI_DEC_BYTE, ['0x{:02X}'.format(BIDI_DECODE[byte])]])
+            self.put(
+                self.ss_us2es(ss, 1 * BIDI_BIT_TIME),
+                self.ss_us2es(ss, 9 * BIDI_BIT_TIME), self.out_ann,
+                [Ann.BIDI_DEC_BYTE, ['0x{:02X}'.format(BIDI_DECODE[byte])]])
 
             # Error
             popcount = bin(byte).count('1')
             if popcount != 4:
-                self.put(self.ss_us2es(ss, 1 * BIDI_BIT_TIME), self.ss_us2es(ss, 9 * BIDI_BIT_TIME), self.out_ann,
+                self.put(self.ss_us2es(ss, 1 * BIDI_BIT_TIME),
+                         self.ss_us2es(ss, 9 * BIDI_BIT_TIME), self.out_ann,
                          [Ann.BIDI_ERROR, ['Invalid Byte']])
 
         # Append empty bytes if length < 8
@@ -1605,22 +1902,27 @@ class Decoder(srd.Decoder):
     def annotate_bidi_frame(self):
         '''Annotate BiDi frame.'''
         # TCE (put it twice, so that the annotation stays visible)
-        self.put(self.last_dcc_ss[-1], self.ss_us2es(self.last_dcc_ss[-1], BIDI_TCE_MAX), self.out_ann,
-                 [Ann.BIDI_FRAME_TCE, ['']])
-        self.put(self.ss_us2es(self.last_dcc_ss[-1], BIDI_TTC2), self.ss_us2es(self.last_dcc_ss[-1], BIDI_TCE_MAX),
+        self.put(self.last_dcc_ss[-1],
+                 self.ss_us2es(self.last_dcc_ss[-1], BIDI_TCE_MAX),
+                 self.out_ann, [Ann.BIDI_FRAME_TCE, ['']])
+        self.put(self.ss_us2es(self.last_dcc_ss[-1], BIDI_TTC2),
+                 self.ss_us2es(self.last_dcc_ss[-1], BIDI_TCE_MAX),
                  self.out_ann, [Ann.BIDI_FRAME_TCE, ['Cutout End', 'TCE']])
 
         # TCS
-        self.put(self.last_dcc_ss[-1], self.ss_us2es(self.last_dcc_ss[-1], BIDI_TCS_MIN), self.out_ann,
-                 [Ann.BIDI_FRAME_TCS, ['Cutout Start', 'TCS']])
+        self.put(self.last_dcc_ss[-1],
+                 self.ss_us2es(self.last_dcc_ss[-1], BIDI_TCS_MIN),
+                 self.out_ann, [Ann.BIDI_FRAME_TCS, ['Cutout Start', 'TCS']])
 
         # CH1
-        self.put(self.ss_us2es(self.last_dcc_ss[-1], BIDI_TTS1), self.ss_us2es(self.last_dcc_ss[-1], BIDI_TTC1),
-                 self.out_ann, [Ann.BIDI_FRAME_CH, ['Channel 1', 'CH1']])
+        self.put(self.ss_us2es(self.last_dcc_ss[-1], BIDI_TTS1),
+                 self.ss_us2es(self.last_dcc_ss[-1], BIDI_TTC1), self.out_ann,
+                 [Ann.BIDI_FRAME_CH, ['Channel 1', 'CH1']])
 
         # CH2
-        self.put(self.ss_us2es(self.last_dcc_ss[-1], BIDI_TTS2), self.ss_us2es(self.last_dcc_ss[-1], BIDI_TTC2),
-                 self.out_ann, [Ann.BIDI_FRAME_CH, ['Channel 2', 'CH2']])
+        self.put(self.ss_us2es(self.last_dcc_ss[-1], BIDI_TTS2),
+                 self.ss_us2es(self.last_dcc_ss[-1], BIDI_TTC2), self.out_ann,
+                 [Ann.BIDI_FRAME_CH, ['Channel 2', 'CH2']])
 
     def annotate_bidi_id_and_data(self):
         '''Annotate BiDi ID and date.'''
@@ -1639,7 +1941,8 @@ class Decoder(srd.Decoder):
                 i = self.annotate_bidi_ack(i)
             elif self.bidi_enc_bytes[i] == BIDI_NAK:
                 i = self.annotate_bidi_nak(i)
-            elif self.last_dcc_addr_type in ('BROADCAST', 'BASIC_LOCO', 'EXT_LOCO'):
+            elif self.last_dcc_addr_type in ('BROADCAST', 'BASIC_LOCO',
+                                             'EXT_LOCO'):
                 if id == 0:
                     i = self.annotate_bidi_id_and_data_app_pom(i)
                 elif id == 1:
@@ -1694,28 +1997,33 @@ class Decoder(srd.Decoder):
                 return
 
     def annotate_bidi_ack(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, ['ACK']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, ['ACK']])
         return i + 1
 
     def annotate_bidi_nak(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, ['NAK']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, ['NAK']])
         return i + 1
 
     def annotate_bidi_id_and_data_app_pom(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['app:pom ID=0', 'ID=0']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['app:pom ID=0', 'ID=0']])
         byte_count = bidi_datagram_size(12)
         datagram = self.bidi_dec_bytes[i:i + byte_count]
         data = bidi_make_data(datagram)
-        self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, ['CV={}'.format(data)]])
+        self.put(self.bidi_bytes_ss[i + 1],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, ['CV={}'.format(data)]])
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_adr_high(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['app:adr_high ID=1', 'ID=1']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['app:adr_high ID=1', 'ID=1']])
         byte_count = bidi_datagram_size(12)
         datagram = self.bidi_dec_bytes[i:i + byte_count]
         self.bidi_app['adr_high'] = bidi_make_data(datagram)
@@ -1723,8 +2031,9 @@ class Decoder(srd.Decoder):
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_adr_low(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['app:adr_low ID=2', 'ID=2']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['app:adr_low ID=2', 'ID=2']])
         byte_count = bidi_datagram_size(12)
         datagram = self.bidi_dec_bytes[i:i + byte_count]
         self.bidi_app['adr_low'] = bidi_make_data(datagram)
@@ -1732,8 +2041,9 @@ class Decoder(srd.Decoder):
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_info1(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['app:info1 ID=3', 'ID=3']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['app:info1 ID=3', 'ID=3']])
         byte_count = bidi_datagram_size(12)
         datagram = self.bidi_dec_bytes[i:i + byte_count]
         self.bidi_app['info1'] = bidi_make_data(datagram)
@@ -1742,20 +2052,24 @@ class Decoder(srd.Decoder):
         driving = (self.bidi_app['info1'] >> 2) & 0b1
         consist = (self.bidi_app['info1'] >> 3) & 0b1
         addr_req = (self.bidi_app['info1'] >> 4) & 0b1
-        self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(
-            self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME), self.out_ann, [
+        self.put(
+            self.bidi_bytes_ss[i + 1],
+            self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+            self.out_ann, [
                 Ann.BIDI_DATA,
                 [
-                    'Track Polarity={} | East-West={} | Driving={} | Consist={} | Addressing Request={}'.format(
-                        track_polarity, ew, driving, consist, addr_req),
-                    'Pol={} | EW={} | Drv={} | C={} | AddrReq={}'.format(track_polarity, ew, driving, consist, addr_req)
+                    'Track Polarity={} | East-West={} | Driving={} | Consist={} | Addressing Request={}'
+                    .format(track_polarity, ew, driving, consist, addr_req),
+                    'Pol={} | EW={} | Drv={} | C={} | AddrReq={}'.format(
+                        track_polarity, ew, driving, consist, addr_req)
                 ]
             ])
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_ext(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['app:ext ID=3', 'ID=3']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['app:ext ID=3', 'ID=3']])
         byte_count = bidi_datagram_size(18)
         datagram = self.bidi_dec_bytes[i:i + byte_count]
         self.bidi_app['ext'] = bidi_make_data(datagram)
@@ -1770,22 +2084,31 @@ class Decoder(srd.Decoder):
             0b1111: 'Filling Station'
         }
         type = type_map.get(self.bidi_app['ext'] >> 8, 'Address Only')
-        self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, [type]])
-        position = self.bidi_app['ext'] if type == 'Address Only' else self.bidi_app['ext'] & 0xFF
-        self.put(self.bidi_bytes_ss[i + 2], self.ss_us2es(self.bidi_bytes_ss[i + 2], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, ['Position={}'.format(position), 'Pos={}'.format(position)]])
+        self.put(self.bidi_bytes_ss[i + 1],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, [type]])
+        position = self.bidi_app[
+            'ext'] if type == 'Address Only' else self.bidi_app['ext'] & 0xFF
+        self.put(
+            self.bidi_bytes_ss[i + 2],
+            self.ss_us2es(self.bidi_bytes_ss[i + 2], 10 * BIDI_BIT_TIME),
+            self.out_ann, [
+                Ann.BIDI_DATA,
+                ['Position={}'.format(position), 'Pos={}'.format(position)]
+            ])
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_info(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['TODO']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['TODO']])
         byte_count = bidi_datagram_size(36)
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_dyn(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['app:dyn ID=7', 'ID=7']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['app:dyn ID=7', 'ID=7']])
         byte_count = bidi_datagram_size(18)
         datagram = self.bidi_dec_bytes[i:i + byte_count]
         self.bidi_app['dyn'] = bidi_make_data(datagram)
@@ -1793,16 +2116,28 @@ class Decoder(srd.Decoder):
         d = self.bidi_app['dyn'] >> 6
         if x == 0:
             d_anns = ['{}km/h'.format(d)]
-            x_anns = ['Actual Speed X={}'.format(x), 'Speed X={}'.format(x), 'X={}'.format(x)]
+            x_anns = [
+                'Actual Speed X={}'.format(x), 'Speed X={}'.format(x),
+                'X={}'.format(x)
+            ]
         elif x == 1:
             d_anns = ['{}km/h'.format(256 + d)]
-            x_anns = ['Actual Speed X={}'.format(x), 'Speed X={}'.format(x), 'X={}'.format(x)]
+            x_anns = [
+                'Actual Speed X={}'.format(x), 'Speed X={}'.format(x),
+                'X={}'.format(x)
+            ]
         elif x == 2:
             if d & 0x80:
-                d_anns = ['Load={} (RCN-600)'.format(d), 'Load={}'.format(d), 'L={}'.format(d)]
+                d_anns = [
+                    'Load={} (RCN-600)'.format(d), 'Load={}'.format(d),
+                    'L={}'.format(d)
+                ]
                 x_anns = ['Load X={}'.format(x), 'X={}'.format(x)]
             else:
-                d_anns = ['Speed={}/128'.format(d & 0x7F), 'S={}/128'.format(d & 0x7F)]
+                d_anns = [
+                    'Speed={}/128'.format(d & 0x7F),
+                    'S={}/128'.format(d & 0x7F)
+                ]
                 x_anns = ['Speed Steps X={}'.format(x), 'X={}'.format(x)]
         elif x == 3:
             major = (d >> 4) & 0x0F
@@ -1820,10 +2155,15 @@ class Decoder(srd.Decoder):
             x_anns = ['Input Register X={}'.format(x), 'X={}'.format(x)]
         elif x == 7:
             d_anns = ['{}%'.format(d)]
-            x_anns = ['Quality of Service X={}'.format(x), 'QoS X={}'.format(x), 'X={}'.format(x)]
+            x_anns = [
+                'Quality of Service X={}'.format(x), 'QoS X={}'.format(x),
+                'X={}'.format(x)
+            ]
         elif 8 <= i <= 19:
             d_anns = ['{}%'.format(d)]
-            x_anns = ['Container {} Level X={}'.format(x - 7, x), 'X={}'.format(x)]
+            x_anns = [
+                'Container {} Level X={}'.format(x - 7, x), 'X={}'.format(x)
+            ]
         elif x == 20:
             # Optional second dyn
             next_id = self.bidi_dec_bytes[i + byte_count] >> 2
@@ -1841,7 +2181,8 @@ class Decoder(srd.Decoder):
             if (d >> 6) & 0b1:
                 d_anns = ['Related to DV={} Alarm={}'.format(d & 0x3F, d >> 7)]
             # MOB alarm
-            elif self.last_dcc_addr_type in ('BROADCAST', 'BASIC_LOCO', 'EXT_LOCO'):
+            elif self.last_dcc_addr_type in ('BROADCAST', 'BASIC_LOCO',
+                                             'EXT_LOCO'):
                 if d == 128:
                     d_anns = ['Motor Short']
                 elif d == 129:
@@ -1858,7 +2199,9 @@ class Decoder(srd.Decoder):
                     d_anns = ['Overtemperature']
                 else:
                     d_anns = ['?']
-            x_anns = ['Status and Alarm Messages X={}'.format(x), 'X={}'.format(x)]
+            x_anns = [
+                'Status and Alarm Messages X={}'.format(x), 'X={}'.format(x)
+            ]
         elif x == 22:
             d_anns = ['{}'.format(d)]
             x_anns = ['Trip Odometer X={}'.format(x), 'X={}'.format(x)]
@@ -1878,52 +2221,70 @@ class Decoder(srd.Decoder):
             d_anns = [
                 'Direction={} | East-West={} | Direction Control={} | Direction Change={} | HideUI={} | East-West-Inverted={}'
                 .format(dir, ew, dir_ctrl, dir_chg, ew_hide, ew_inv),
-                'D={} | EW={} | DCtrl={} | DChg={} | HideUI={} | EWInv={}'.format(dir, ew, dir_ctrl, dir_chg, ew_hide,
-                                                                                  ew_inv)
+                'D={} | EW={} | DCtrl={} | DChg={} | HideUI={} | EWInv={}'.
+                format(dir, ew, dir_ctrl, dir_chg, ew_hide, ew_inv)
             ]
-            x_anns = ['Direction Status Byte X={}'.format(x), 'Direction Status X={}'.format(x), 'X={}'.format(x)]
+            x_anns = [
+                'Direction Status Byte X={}'.format(x),
+                'Direction Status X={}'.format(x), 'X={}'.format(x)
+            ]
         elif x == 34:
             d_anns = ['{}'.format(d - 128)]
             x_anns = ['Control Deviation X={}'.format(x), 'X={}'.format(x)]
         elif x == 46:
             d_anns = ['{}V'.format(5 + d * 0.1)]
-            x_anns = ['Track Voltage X={}'.format(x), 'Voltage X={}'.format(x), 'X={}'.format(x)]
+            x_anns = [
+                'Track Voltage X={}'.format(x), 'Voltage X={}'.format(x),
+                'X={}'.format(x)
+            ]
         elif x == 47:
             d_anns = ['{}m'.format(d * 4)]
             x_anns = ['Stopping Distance X={}'.format(x), 'X={}'.format(x)]
         else:
             d_anns = ['? D={}'.format(d), 'D={}'.format(d)]
             x_anns = ['? X={}'.format(x), 'X={}'.format(x)]
-        self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, d_anns])
-        self.put(self.bidi_bytes_ss[i + 2], self.ss_us2es(self.bidi_bytes_ss[i + 2], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, x_anns])
+        self.put(self.bidi_bytes_ss[i + 1],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, d_anns])
+        self.put(self.bidi_bytes_ss[i + 2],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 2], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, x_anns])
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_xpom(self, i):
         id = self.bidi_dec_bytes[i] >> 2
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['app:xpom ID={}'.format(id), 'ID={}'.format(id)]])
+        self.put(
+            self.bidi_bytes_ss[i],
+            self.ss_us2es(self.bidi_bytes_ss[i],
+                          10 * BIDI_BIT_TIME), self.out_ann,
+            [Ann.BIDI_ID, ['app:xpom ID={}'.format(id), 'ID={}'.format(id)]])
         byte_count = bidi_datagram_size(36)
         datagram = self.bidi_dec_bytes[i:i + byte_count]
         self.bidi_app['xpom'] = bidi_make_data(datagram)
         ss = id & 0b11
-        cvs = [(self.bidi_app['xpom'] >> shift) & 0xFF for shift in (24, 16, 8, 0)]
-        self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, ['SS={:02b}'.format(ss)]])
-        self.put(self.bidi_bytes_ss[i + 2], self.ss_us2es(self.bidi_bytes_ss[i + 2], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, ['CV[0]={}'.format(cvs[0])]])
-        self.put(self.bidi_bytes_ss[i + 3], self.ss_us2es(self.bidi_bytes_ss[i + 3], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, ['CV[1]={}'.format(cvs[1])]])
-        self.put(self.bidi_bytes_ss[i + 4], self.ss_us2es(self.bidi_bytes_ss[i + 4], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, ['CV[2]={}'.format(cvs[2])]])
-        self.put(self.bidi_bytes_ss[i + 5], self.ss_us2es(self.bidi_bytes_ss[i + 5], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, ['CV[3]={}'.format(cvs[3])]])
+        cvs = [(self.bidi_app['xpom'] >> shift) & 0xFF
+               for shift in (24, 16, 8, 0)]
+        self.put(self.bidi_bytes_ss[i + 1],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, ['SS={:02b}'.format(ss)]])
+        self.put(self.bidi_bytes_ss[i + 2],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 2], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, ['CV[0]={}'.format(cvs[0])]])
+        self.put(self.bidi_bytes_ss[i + 3],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 3], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, ['CV[1]={}'.format(cvs[1])]])
+        self.put(self.bidi_bytes_ss[i + 4],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 4], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, ['CV[2]={}'.format(cvs[2])]])
+        self.put(self.bidi_bytes_ss[i + 5],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 5], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, ['CV[3]={}'.format(cvs[3])]])
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_cv_auto(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['app:CV-auto ID12', 'ID12']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['app:CV-auto ID12', 'ID12']])
         byte_count = bidi_datagram_size(36)
         datagram = self.bidi_dec_bytes[i:i + byte_count]
         self.bidi_app['CV-auto'] = bidi_make_data(datagram)
@@ -1932,63 +2293,86 @@ class Decoder(srd.Decoder):
         cv_offset = (self.bidi_app['CV-auto'] >> 8) & 0xFF
         cv_addr = cv31 << 16 | cv32 << 8 | cv_offset << 0
         cv_value = (self.bidi_app['CV-auto'] >> 0) & 0xFF
-        self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, ['CV31={}'.format(cv31)]])
-        self.put(self.bidi_bytes_ss[i + 2], self.ss_us2es(self.bidi_bytes_ss[i + 2], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, ['CV32={}'.format(cv32)]])
-        self.put(self.bidi_bytes_ss[i + 3], self.ss_us2es(self.bidi_bytes_ss[i + 3], 10 * BIDI_BIT_TIME), self.out_ann,
+        self.put(self.bidi_bytes_ss[i + 1],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, ['CV31={}'.format(cv31)]])
+        self.put(self.bidi_bytes_ss[i + 2],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 2], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, ['CV32={}'.format(cv32)]])
+        self.put(self.bidi_bytes_ss[i + 3],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 3],
+                               10 * BIDI_BIT_TIME), self.out_ann,
                  [Ann.BIDI_DATA, ['CV#(rel)={}'.format(cv_offset + 1)]])
-        self.put(self.bidi_bytes_ss[i + 4], self.ss_us2es(self.bidi_bytes_ss[i + 4], 10 * BIDI_BIT_TIME), self.out_ann,
+        self.put(self.bidi_bytes_ss[i + 4],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 4],
+                               10 * BIDI_BIT_TIME), self.out_ann,
                  [Ann.BIDI_DATA, ['CV#(abs)={}'.format(cv_addr + 1)]])
-        self.put(self.bidi_bytes_ss[i + 5], self.ss_us2es(self.bidi_bytes_ss[i + 5], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, ['CV={}'.format(cv_value)]])
+        self.put(self.bidi_bytes_ss[i + 5],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 5], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, ['CV={}'.format(cv_value)]])
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_block(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['TODO']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['TODO']])
         byte_count = bidi_datagram_size(36)
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_search(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['app:search ID=14', 'ID=14']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['app:search ID=14', 'ID=14']])
         byte_count = bidi_datagram_size(12)
         datagram = self.bidi_dec_bytes[i:i + byte_count]
         self.bidi_app['search'] = bidi_make_data(datagram)
-        self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['Time={}s'.format(self.bidi_app['search']), '{}s'.format(self.bidi_app['search'])]])
+        self.put(self.bidi_bytes_ss[i + 1],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [
+                     Ann.BIDI_ID,
+                     [
+                         'Time={}s'.format(self.bidi_app['search']),
+                         '{}s'.format(self.bidi_app['search'])
+                     ]
+                 ])
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_srq(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['app:srq']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['app:srq']])
         byte_count = bidi_datagram_size(12)
         datagram = self.bidi_dec_bytes[i:i + byte_count]
         self.bidi_app['srq'] = bidi_make_data(datagram)
         addr_type = 'Extended' if self.bidi_app['srq'] >> 11 else 'Basic'
         addr = self.bidi_app['srq'] & 0x7FF
         anns = '{} Accessory={}'.format(addr_type, addr)
-        self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, [anns, str(addr)]])
+        self.put(self.bidi_bytes_ss[i + 1],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, [anns, str(addr)]])
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_stat4(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['app:stat4 ID=3', 'ID=3']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['app:stat4 ID=3', 'ID=3']])
         byte_count = bidi_datagram_size(12)
         datagram = self.bidi_dec_bytes[i:i + byte_count]
         self.bidi_app['stat4'] = bidi_make_data(datagram)
         rs_map = {0b10: '0', 0b01: '1'}
-        rs = [(self.bidi_app['stat4'] >> shift) & 0b11 for shift in (6, 4, 2, 0)]
-        anns = ' '.join('R{}={}'.format(4 - i, rs_map.get(r, '?')) for i, r in enumerate(rs))
-        self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, [anns]])
+        rs = [(self.bidi_app['stat4'] >> shift) & 0b11
+              for shift in (6, 4, 2, 0)]
+        anns = ' '.join('R{}={}'.format(4 - i, rs_map.get(r, '?'))
+                        for i, r in enumerate(rs))
+        self.put(self.bidi_bytes_ss[i + 1],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, [anns]])
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_stat1(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['app:stat1 ID=4', 'ID=4']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['app:stat1 ID=4', 'ID=4']])
         byte_count = bidi_datagram_size(12)
         # First stat1
         datagram = self.bidi_dec_bytes[i:i + byte_count]
@@ -2002,48 +2386,70 @@ class Decoder(srd.Decoder):
             datagram = self.bidi_dec_bytes[i + byte_count:i + byte_count * 2]
             self.bidi_app['stat1'] = bidi_make_data(datagram)
             aspect = (self.bidi_app['stat1'] & 0b111) << 5 | aspect
-            self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(self.bidi_bytes_ss[i + 1],
-                                                              10 * BIDI_BIT_TIME), self.out_ann,
-                     [Ann.BIDI_DATA, ['Initial State Matches Last Received={}'.format(bit6), 'Bit6={}'.format(bit6)]])
-            self.put(self.bidi_bytes_ss[i + 2], self.ss_us2es(self.bidi_bytes_ss[i + 2],
-                                                              10 * BIDI_BIT_TIME), self.out_ann,
-                     [Ann.BIDI_DATA, ['Returned Aspect Based on Feedback={}'.format(bit6), 'Bit5={}'.format(bit5)]])
-            self.put(self.bidi_bytes_ss[i + 3], self.ss_us2es(self.bidi_bytes_ss[i + 3], 10 * BIDI_BIT_TIME),
-                     self.out_ann, [Ann.BIDI_DATA, ['Aspect={}'.format(aspect)]])
+            self.put(
+                self.bidi_bytes_ss[i + 1],
+                self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                self.out_ann, [
+                    Ann.BIDI_DATA,
+                    [
+                        'Initial State Matches Last Received={}'.format(bit6),
+                        'Bit6={}'.format(bit6)
+                    ]
+                ])
+            self.put(
+                self.bidi_bytes_ss[i + 2],
+                self.ss_us2es(self.bidi_bytes_ss[i + 2], 10 * BIDI_BIT_TIME),
+                self.out_ann, [
+                    Ann.BIDI_DATA,
+                    [
+                        'Returned Aspect Based on Feedback={}'.format(bit6),
+                        'Bit5={}'.format(bit5)
+                    ]
+                ])
+            self.put(
+                self.bidi_bytes_ss[i + 3],
+                self.ss_us2es(self.bidi_bytes_ss[i + 3], 10 * BIDI_BIT_TIME),
+                self.out_ann, [Ann.BIDI_DATA, ['Aspect={}'.format(aspect)]])
             return i + byte_count * 2
         # Only single stat1 for basic accessories (or if next ID ain't 4 as well)
         else:
-            self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(
-                self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME), self.out_ann, [
+            self.put(
+                self.bidi_bytes_ss[i + 1],
+                self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                self.out_ann, [
                     Ann.BIDI_DATA,
                     [
-                        'Initial State Matches Last Received={} Returned Aspect Based on Feedback={} Aspect={}'.format(
-                            bit6, bit5, aspect), 'Bit6={} Bit5={} Aspect={}'.format(bit6, bit5, aspect)
+                        'Initial State Matches Last Received={} Returned Aspect Based on Feedback={} Aspect={}'
+                        .format(bit6, bit5, aspect),
+                        'Bit6={} Bit5={} Aspect={}'.format(bit6, bit5, aspect)
                     ]
                 ])
             return i + byte_count
 
     def annotate_bidi_id_and_data_app_time(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['app:time ID=5', 'ID=5']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['app:time ID=5', 'ID=5']])
         byte_count = bidi_datagram_size(12)
         datagram = self.bidi_dec_bytes[i:i + byte_count]
         self.bidi_app['time'] = bidi_make_data(datagram)
         res = 1.0 if self.bidi_app['time'] & 0x80 else 0.1
         time = res * (self.bidi_app['time'] & 0x7F)
-        self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, ['Time={:.2f}s'.format(time)]])
+        self.put(self.bidi_bytes_ss[i + 1],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, ['Time={:.2f}s'.format(time)]])
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_error(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['app:error ID=6', 'ID=6']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['app:error ID=6', 'ID=6']])
         byte_count = bidi_datagram_size(12)
         datagram = self.bidi_dec_bytes[i:i + byte_count]
         self.bidi_app['error'] = bidi_make_data(datagram)
         code_map = {
             0x00: 'None',
-            0x00: 'Invalid Command',
+            0x01: 'Invalid Command',
             0x02: 'Overcurrent',
             0x03: 'Undervoltage',
             0x04: 'Fuse',
@@ -2056,16 +2462,21 @@ class Decoder(srd.Decoder):
         }
         add = (self.bidi_app['error'] >> 6) & 0b1
         err_str = code_map.get(self.bidi_app['error'] & 0x3F, '?')
-        self.put(self.bidi_bytes_ss[i + 1], self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [
+        self.put(self.bidi_bytes_ss[i + 1],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [
                      Ann.BIDI_DATA,
-                     ['Additional Errors={} Code={}'.format(add, err_str), 'Bit6={} Code={}'.format(add, err_str)]
+                     [
+                         'Additional Errors={} Code={}'.format(add, err_str),
+                         'Bit6={} Code={}'.format(add, err_str)
+                     ]
                  ])
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_test(self, i):
-        self.put(self.bidi_bytes_ss[i], self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['TODO']])
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['TODO']])
         byte_count = bidi_datagram_size(36)
         return i + byte_count
 
@@ -2078,11 +2489,13 @@ class Decoder(srd.Decoder):
         timestamp_str = '{:.6f},'.format(self.last_dcc_ss[0] / self.samplerate)
         self.put(0, 0, self.out_binary, [0, timestamp_str.encode('utf-8')])
         # 'dcc' column
-        dcc_str = '0x' + ''.join('{:02X}'.format(b) for b in self.last_dcc_bytes)
+        dcc_str = '0x' + ''.join('{:02X}'.format(b)
+                                 for b in self.last_dcc_bytes)
         self.put(0, 0, self.out_binary, [0, dcc_str.encode('utf-8')])
         # 'bidi' column
         if self.has_channel(Pin.BIDI):
             self.bidi_enc_bytes.extend([0] * (8 - len(self.bidi_enc_bytes)))
-            bidi_str = ',0x' + ''.join('{:02X}'.format(b) for b in self.bidi_enc_bytes)
+            bidi_str = ',0x' + ''.join('{:02X}'.format(b)
+                                       for b in self.bidi_enc_bytes)
             self.put(0, 0, self.out_binary, [0, bidi_str.encode('utf-8')])
         self.put(0, 0, self.out_binary, [0, '\n'.encode('utf-8')])
