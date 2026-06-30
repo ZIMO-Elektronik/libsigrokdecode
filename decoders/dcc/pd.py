@@ -599,6 +599,10 @@ class Decoder(srd.Decoder):
         return i + BYTE_HBIT
 
     def annotate_dcc_timings_bits_and_errors(self):
+        # The preamble might be odd, so get the second 1-bit and first 0-bit to
+        # determine when to start looking for matching hbits
+        second_1 = self.dcc_hbits.index(1, self.dcc_hbits.index(1) + 1)
+        first_0 = self.dcc_hbits.index(0)
         '''Annotate DCC timings, bits and errors.'''
         for i in range(0, len(self.dcc_hbits), 1):
             us = self.ss_es2us(self.dcc_ss[i], self.dcc_ss[i + 1])
@@ -622,7 +626,7 @@ class Decoder(srd.Decoder):
                     us) == -1 else Ann.TIMING_VALID
                 self.put(self.dcc_ss[i], self.dcc_ss[i + 1], self.out_ann,
                          [ann, ['{}µs'.format(us), str(us)]])
-                if i & 0b1:
+                if i >= second_1 and (i - first_0) & 0b1:
                     hb0 = self.dcc_hbits[i - 1]
                     hb1 = self.dcc_hbits[i]
                     if hb0 == hb1:
@@ -635,17 +639,12 @@ class Decoder(srd.Decoder):
                                  [Ann.ERROR, ['Invalid Bit']])
 
     def annotate_dcc_preamble(self, i):
-        '''Annotate DCC preamble (might be odd).'''
+        '''Annotate DCC preamble.'''
         i = self.dcc_hbits.index(0)
         if i == 0:
             return 0
         self.put(self.dcc_ss[0], self.dcc_ss[i], self.out_ann,
                  [Ann.FRAME_PREAMBLE, ['Preamble', 'P']])
-        # Handle trailing odd
-        if i & 0b1 == 1:
-            self.put(self.dcc_ss[i], self.dcc_ss[i + 1], self.out_ann,
-                     [Ann.BIT, ['1']])
-            i += 1
         return i
 
     def annotate_dcc_service_mode(self, i):
@@ -1402,13 +1401,16 @@ class Decoder(srd.Decoder):
             fstr = 'RailCom={} | '.format((bitmask >> 0) & 0b1)
             fstr += 'DCC-A={} | '.format((bitmask >> 1) & 0b1)
             fstr += 'NOP for Accessories={} | '.format((bitmask >> 2) & 0b1)
-            fstr += 'POM Read={} | '.format((bitmask >> 3) & 0b1)
+            fstr += 'POM Read (ID0)={} | '.format((bitmask >> 3) & 0b1)
             fstr += 'XPOM Read={} | '.format((bitmask >> 4) & 0b1)
-            fstr += 'app:dyn Container Levels={} | '.format((bitmask >> 8)
-                                                            & 0b1)
-            fstr += 'app:dyn Operating Parameters={} | '.format((bitmask >> 9)
-                                                                & 0b1)
-            fstr += 'app:dyn Track Voltage={} | '.format((bitmask >> 10) & 0b1)
+            fstr += 'POM Read (ID12)={} | '.format((bitmask >> 5) & 0b1)
+            fstr += 'Container Levels (ID7:8-19)={} | '.format((bitmask >> 8)
+                                                               & 0b1)
+            fstr += 'Operating Parameters (ID7:0-1,7,20,22,26)={} | '.format(
+                (bitmask >> 9)
+                & 0b1)
+            fstr += 'Track Voltage (ID7:46)={} | '.format((bitmask >> 10)
+                                                          & 0b1)
             fstr += 'RailCom+={}'.format((bitmask >> 15) & 0b1)
             self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
                      [self.get_ann_instr(), [fstr]])
@@ -1503,7 +1505,7 @@ class Decoder(srd.Decoder):
         # Reserved
         if kk == 0b00:
             self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                     [self.get_ann_instr(), ['Reserved']])
+                     [self.get_ann_instr(), ['Reserved', 'R']])
         # Verify
         elif kk == 0b01:
             cv_value = self.dcc_bytes[-1]
@@ -1631,7 +1633,7 @@ class Decoder(srd.Decoder):
         # Reserved
         if kk == 0b00:
             self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                     [self.get_ann_instr(), ['Reserved']])
+                     [self.get_ann_instr(), ['Reserved', 'R']])
             i = self.annotate_dcc_byte(i)
         # Verify
         elif kk == 0b01:
@@ -1748,9 +1750,285 @@ class Decoder(srd.Decoder):
         return i
 
     def annotate_dcc_instr_automatic_logon(self, i):
+        instr = self.dcc_bytes[-1]
+        if instr in (0b00000000, 0b00000001):
+            i = self.annotate_dcc_instr_automatic_logon_get_data(i)
+        elif instr in (0b00000010, 0b00000011):
+            i = self.annotate_dcc_instr_automatic_logon_set_data(i)
+        elif instr in (0b11010000, 0b11010001, 0b11010010, 0b11010011,
+                       0b11010100, 0b11010101, 0b11010110, 0b11010111,
+                       0b11011000, 0b11011001, 0b11011010, 0b11011011,
+                       0b11011100, 0b11011101, 0b11011110, 0b11011111):
+            i = self.annotate_dcc_instr_automatic_logon_select(i)
+        elif instr in (0b11100000, 0b11100001, 0b11100010, 0b11100011,
+                       0b11100100, 0b11100101, 0b11100110, 0b11100111,
+                       0b11101000, 0b11101001, 0b11101010, 0b11101011,
+                       0b11101100, 0b11101101, 0b11101110, 0b11101111):
+            i = self.annotate_dcc_instr_automatic_logon_assign(i)
+        elif instr in (0b11111100, 0b11111101, 0b11111110, 0b11111111):
+            i = self.annotate_dcc_instr_automatic_logon_enable(i)
+        else:
+            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), ['Reserved', 'R']])
+            i += BYTE_HBIT
+        return i
+
+    def annotate_dcc_instr_automatic_logon_get_data(self, i):
         self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
                  [self.get_ann_instr(), ['TODO']])
         i += BYTE_HBIT
+        return i
+
+    def annotate_dcc_instr_automatic_logon_set_data(self, i):
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                 [self.get_ann_instr(), ['TODO']])
+        i += BYTE_HBIT
+        return i
+
+    def annotate_dcc_instr_automatic_logon_select(self, i):
+        # Instruction
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                 [self.get_ann_instr(), ['SELECT']])
+        i += BYTE_HBIT
+        # Manufacturer ID
+        i = self.annotate_dcc_frame_start_bit(i)
+        self.annotate_frame_instr(i)
+        self.dcc_bytes.append(self.get_dcc_byte_at(i))
+        mid = (self.dcc_bytes[-2] & 0x0F) << 8 | self.dcc_bytes[-1]
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['Manufacturer ID={}'.format(mid), 'MID={}'.format(mid)]
+        ])
+        i = self.annotate_dcc_byte(i)
+        # UID
+        for j in range(0, 4):
+            i = self.annotate_dcc_frame_start_bit(i)
+            if j == 0:
+                ss = self.dcc_ss[i]
+            self.annotate_frame_instr(i)
+            self.dcc_bytes.append(self.get_dcc_byte_at(i))
+            if j == 3:
+                uid = (self.dcc_bytes[-4] << 24 | self.dcc_bytes[-3] << 16
+                       | self.dcc_bytes[-2] << 8 | self.dcc_bytes[-1] << 0)
+                self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                         [self.get_ann_instr(), ['UID=0x{:08X}'.format(uid)]])
+            i = self.annotate_dcc_byte(i)
+        # Sub command
+        i = self.annotate_dcc_frame_start_bit(i)
+        self.annotate_frame_instr(i)
+        self.dcc_bytes.append(self.get_dcc_byte_at(i))
+        bbbbbbbb = self.dcc_bytes[-1]
+        block_map = {
+            0: ['Extended Capabilities'],
+            1: ['SpaceInfo'],
+            2: ['ShortGUI'],
+            3: ['CV-Block'],
+            4: ['Icon'],
+            5: ['Name'],
+            6: ['DecoderInfo'],
+            7: ['VehicleInfo'],
+        }
+        if bbbbbbbb == 0b11111111:
+            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), ['ReadShortInfo']])
+        elif bbbbbbbb == 0b11111110:
+            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), ['ReadBlock']])
+            i = self.annotate_dcc_byte(i)
+            # NNNN-NNNN
+            i = self.annotate_dcc_frame_start_bit(i)
+            self.annotate_frame_instr(i)
+            self.dcc_bytes.append(self.get_dcc_byte_at(i))
+            nnnnnnnn = self.dcc_bytes[-1]
+            self.put(
+                self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                    self.get_ann_instr(),
+                    ['#={} {}'.format(nnnnnnnn, block_map.get(nnnnnnnn, ''))]
+                ])
+        elif bbbbbbbb == 0b11111100:
+            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), ['WriteBlock']])
+            i = self.annotate_dcc_byte(i)
+            # NNNN-NNNN
+            i = self.annotate_dcc_frame_start_bit(i)
+            self.annotate_frame_instr(i)
+            self.dcc_bytes.append(self.get_dcc_byte_at(i))
+            nnnnnnnn = self.dcc_bytes[-1]
+            self.put(
+                self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                    self.get_ann_instr(),
+                    ['#={} {}'.format(nnnnnnnn, block_map.get(nnnnnnnn, ''))]
+                ])
+            i = self.annotate_dcc_byte(i)
+            # SSSS-SSSS
+            i = self.annotate_dcc_frame_start_bit(i)
+            ss = self.dcc_ss[i]
+            self.annotate_frame_instr(i)
+            self.dcc_bytes.append(self.get_dcc_byte_at(i))
+            i = self.annotate_dcc_byte(i)
+            # ssss-ssss
+            i = self.annotate_dcc_frame_start_bit(i)
+            self.annotate_frame_instr(i)
+            self.dcc_bytes.append(self.get_dcc_byte_at(i))
+            ssssssss = self.dcc_bytes[-2] << 8 | self.dcc_bytes[-1]
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), ['Size={}'.format(ssssssss)]])
+        elif bbbbbbbb == 0b11111011:
+            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), ['Set Decoder Internal Status']])
+            i = self.annotate_dcc_byte(i)
+            i = self.annotate_dcc_frame_start_bit(i)
+            self.annotate_frame_instr(i)
+            self.dcc_bytes.append(self.get_dcc_byte_at(i))
+            nnnnnnnn = self.dcc_bytes[-1]
+            if nnnnnnnn == 0b11111111:
+                self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT],
+                         self.out_ann,
+                         [self.get_ann_instr(), ['Clear Change Flags']])
+            else:
+                self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT],
+                         self.out_ann,
+                         [self.get_ann_instr(), ['Reserved', 'R']])
+        elif bbbbbbbb == 0b11111101 or 0b11111010 >= bbbbbbbb >= 0b00000000:
+            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), ['Reserved', 'R']])
+        i = self.annotate_dcc_byte(i)
+        return self.annotate_dcc_crc8(i)
+
+    def annotate_dcc_instr_automatic_logon_assign(self, i):
+        # Instruction
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                 [self.get_ann_instr(), ['LOGON_ASSIGN', 'ASSIGN']])
+        i += BYTE_HBIT
+        # Manufacturer ID
+        i = self.annotate_dcc_frame_start_bit(i)
+        self.annotate_frame_instr(i)
+        self.dcc_bytes.append(self.get_dcc_byte_at(i))
+        mid = (self.dcc_bytes[-2] & 0x0F) << 8 | self.dcc_bytes[-1]
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['Manufacturer ID={}'.format(mid), 'MID={}'.format(mid)]
+        ])
+        i = self.annotate_dcc_byte(i)
+        # UID
+        for j in range(0, 4):
+            i = self.annotate_dcc_frame_start_bit(i)
+            if j == 0:
+                ss = self.dcc_ss[i]
+            self.annotate_frame_instr(i)
+            self.dcc_bytes.append(self.get_dcc_byte_at(i))
+            if j == 3:
+                uid = (self.dcc_bytes[-4] << 24 | self.dcc_bytes[-3] << 16
+                       | self.dcc_bytes[-2] << 8 | self.dcc_bytes[-1] << 0)
+                self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                         [self.get_ann_instr(), ['UID=0x{:08X}'.format(uid)]])
+            i = self.annotate_dcc_byte(i)
+        # Address high byte
+        i = self.annotate_dcc_frame_start_bit(i)
+        ss = self.dcc_ss[i]
+        self.annotate_frame_instr(i)
+        self.dcc_bytes.append(self.get_dcc_byte_at(i))
+        i = self.annotate_dcc_byte(i)
+        # Address low byte
+        i = self.annotate_dcc_frame_start_bit(i)
+        self.annotate_frame_instr(i)
+        self.dcc_bytes.append(self.get_dcc_byte_at(i))
+        bb = self.dcc_bytes[-2] >> 6
+        bb_str = 'permanent' if bb == 0b10 else 'temporary'
+        a13_8 = self.dcc_bytes[-2] & 0b00111111
+        if 0x00 <= a13_8 <= 0x27:
+            addr = a13_8 << 8 | self.dcc_bytes[-1]
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                self.get_ann_instr(),
+                [
+                    'Extended Loco={} ({})'.format(addr, bb_str),
+                    'Loco={}'.format(addr)
+                ]
+            ])
+        elif 0x28 <= a13_8 <= 0x2F:
+            addr = (a13_8 << 8 | self.dcc_bytes[-1]) & 0x7FF
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                self.get_ann_instr(),
+                [
+                    'Extended Accessory={} ({})'.format(addr, bb_str),
+                    'Accessory={}'.format(addr)
+                ]
+            ])
+            pass
+        elif 0x30 <= a13_8 <= 0x37:  # Basic accessory
+            addr = (a13_8 << 8 | self.dcc_bytes[-1]) & 0x7FF
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                self.get_ann_instr(),
+                [
+                    'Basic Accessory={} ({})'.format(addr, bb_str),
+                    'Accessory={}'.format(addr)
+                ]
+            ])
+        elif 0x38 == a13_8:
+            addr = self.dcc_bytes[-1] & 0x7F
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+                self.get_ann_instr(),
+                [
+                    'Basic Loco={} ({})'.format(addr, bb_str),
+                    'Loco={}'.format(addr)
+                ]
+            ])
+        elif 0x39 <= a13_8 <= 0x3E:
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), ['Reserved', 'R']])
+        elif 0x3F == a13_8:
+            self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), ['Firmware update', 'FW update']])
+
+        i = self.annotate_dcc_byte(i)
+        return self.annotate_dcc_crc8(i)
+
+    def annotate_dcc_instr_automatic_logon_enable(self, i):
+        # Instruction
+        gg_map = {
+            0b00: ['LOGON_ENABLE(ALL)', 'ENABLE(ALL)', 'ALL'],
+            0b01: ['LOGON_ENABLE(LOCO)', 'ENABLE(LOCO)', 'LOCO'],
+            0b10: ['LOGON_ENABLE(ACC)', 'ENABLE(ACC)', 'ACC'],
+            0b11: ['LOGON_ENABLE(NOW)', 'ENABLE(NOW)', 'NOW'],
+        }
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                 [self.get_ann_instr(),
+                  gg_map.get(self.dcc_bytes[-1] & 0b11)])
+        i += BYTE_HBIT
+        # CID high byte
+        i = self.annotate_dcc_frame_start_bit(i)
+        ss = self.dcc_ss[i]
+        self.annotate_frame_instr(i)
+        self.dcc_bytes.append(self.get_dcc_byte_at(i))
+        i = self.annotate_dcc_byte(i)
+        # CID low byte
+        i = self.annotate_dcc_frame_start_bit(i)
+        self.annotate_frame_instr(i)
+        self.dcc_bytes.append(self.get_dcc_byte_at(i))
+        zid = self.dcc_bytes[-2] << 8 | self.dcc_bytes[-1]
+        self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                 [self.get_ann_instr(), ['CID=0x{:04X}'.format(zid)]])
+        i = self.annotate_dcc_byte(i)
+        # SID
+        i = self.annotate_dcc_frame_start_bit(i)
+        self.annotate_frame_instr(i)
+        self.dcc_bytes.append(self.get_dcc_byte_at(i))
+        sid = self.dcc_bytes[-1]
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                 [self.get_ann_instr(), ['SID={}'.format(sid)]])
+        i = self.annotate_dcc_byte(i)
+        return i
+
+    def annotate_dcc_crc8(self, i):
+        if len(self.dcc_bytes) > 6:
+            i = self.annotate_dcc_frame_start_bit(i)
+            self.annotate_frame_instr(i)
+            self.dcc_bytes.append(self.get_dcc_byte_at(i))
+            crc8_sign = CROSS_MARK if crc8(self.dcc_bytes) else CHECK_SIGN
+            anns = ['CRC8 ' + crc8_sign, crc8_sign]
+            self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
+                     [self.get_ann_instr(), anns])
+            i = self.annotate_dcc_byte(i)
         return i
 
     def annotate_dcc_instr_digital_decoder_idle(self, i):
@@ -1763,7 +2041,7 @@ class Decoder(srd.Decoder):
         i = self.annotate_dcc_frame_start_bit(i)
         self.dcc_bytes.append(self.get_dcc_byte_at(i))
         checksum = exor(self.dcc_bytes)
-        checksum_sign = '\u2718' if checksum else '\u2714'
+        checksum_sign = CROSS_MARK if checksum else CHECK_SIGN
         anns = ['Checksum ' + checksum_sign, checksum_sign]
         self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
                  [Ann.FRAME_CHECKSUM, anns])
@@ -1982,7 +2260,7 @@ class Decoder(srd.Decoder):
                 elif id == 6:
                     i = self.annotate_bidi_id_and_data_app_error(i)
                 elif id == 7:
-                    i += self.annotate_bidi_id_and_data_app_dyn(i)
+                    i = self.annotate_bidi_id_and_data_app_dyn(i)
                 elif id in (8, 9, 10, 11):
                     i = self.annotate_bidi_id_and_data_app_xpom(i)
                 elif id == 12:
@@ -1992,6 +2270,10 @@ class Decoder(srd.Decoder):
                 else:
                     return
             elif self.last_dcc_addr_type == 'AUTOMATIC_LOGON':
+                if id == 13:
+                    i = self.annotate_bidi_id_and_data_app_decoder_state(i)
+                elif id == 15:
+                    i = self.annotate_bidi_id_and_data_app_decoder_unique(i)
                 return
             else:
                 return
@@ -2478,6 +2760,86 @@ class Decoder(srd.Decoder):
                  self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
                  self.out_ann, [Ann.BIDI_ID, ['TODO']])
         byte_count = bidi_datagram_size(36)
+        return i + byte_count
+
+    def annotate_bidi_id_and_data_app_decoder_state(self, i):
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i],
+                               10 * BIDI_BIT_TIME), self.out_ann,
+                 [Ann.BIDI_ID, ['app:decoder_state ID=13', 'ID=13']])
+        byte_count = bidi_datagram_size(48)
+        datagram = self.bidi_dec_bytes[i:i + byte_count]
+        self.bidi_app['decoder_state'] = bidi_make_data(datagram)
+        # Change flags
+        flags = (self.bidi_app['decoder_state'] >> 36) & 0xFF
+        fstr = 'CID={} | '.format((flags >> 0) & 0b1)
+        fstr += 'FW={} | '.format((flags >> 1) & 0b1)
+        fstr += 'Driving/Switching Behavior={} | '.format((flags >> 2) & 0b1)
+        fstr += 'Mapping={} | '.format((flags >> 3) & 0b1)
+        fstr += 'GUI={} | '.format((flags >> 4) & 0b1)
+        fstr += 'Consist={} | '.format((flags >> 5) & 0b1)
+        fstr += 'Address/ShortGUI={}'.format((flags >> 7) & 0b1)
+        self.put(self.bidi_bytes_ss[i + 1],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, [fstr]])
+        # Change count
+        change_count = (self.bidi_app['decoder_state'] >> 24) & 0xFFF
+        self.put(self.bidi_bytes_ss[i + 2],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 2],
+                               10 * BIDI_BIT_TIME), self.out_ann,
+                 [Ann.BIDI_ID, ['Change count={}'.format(change_count)]])
+        # Extended capabilities
+        caps = (self.bidi_app['decoder_state'] >> 8) & 0xFFFF
+        fstr = 'Dynamic CH1={} | '.format((caps >> 8) & 0b1)
+        fstr += 'Info1 (ID3)={} | '.format((caps >> 9) & 0b1)
+        fstr += 'Location Service (ID3)={} | '.format((caps >> 10) & 0b1)
+        fstr += 'Speed (ID7:0-1)={} | '.format((caps >> 11) & 0b1)
+        fstr += 'QoS (ID7:7)={} | '.format((caps >> 12) & 0b1)
+        fstr += 'Status and Error Messages (ID7:21)={} | '.format((caps >> 13)
+                                                                  & 0b1)
+        fstr += 'Temperature (ID7:26)={} | '.format((caps >> 14) & 0b1)
+        fstr += 'Direction Status Byte (ID7:27)={} | '.format((caps >> 15)
+                                                              & 0b1)
+        fstr += 'CV-Auto (ID12)={} | '.format((caps >> 16) & 0b1)
+        fstr += 'Binary State Short={} | '.format((caps >> 17) & 0b1)
+        fstr += 'Binary State Long={} | '.format((caps >> 18) & 0b1)
+        fstr += 'Speed, Direction and Functions={} | '.format((caps >> 19)
+                                                              & 0b1)
+        fstr += 'CV Access Short | '.format((caps >> 20) & 0b1)
+        fstr += 'Special Operating Modes={} | '.format((caps >> 22) & 0b1)
+        fstr += 'Multiple Instructions Single Packet={}'.format((caps >> 23)
+                                                                & 0b1)
+        self.put(self.bidi_bytes_ss[i + 3],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 6], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, [fstr]])
+        # CRC
+        crc = (self.bidi_app['decoder_state'] >> 0) & 0xFF
+        self.put(self.bidi_bytes_ss[i + 7],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 7], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['CRC=0x{:02X}'.format(crc)]])
+        return i + byte_count
+
+    def annotate_bidi_id_and_data_app_decoder_unique(self, i):
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i],
+                               10 * BIDI_BIT_TIME), self.out_ann,
+                 [Ann.BIDI_ID, ['app:decoder_unique ID=15', 'ID=15']])
+        byte_count = bidi_datagram_size(48)
+        datagram = self.bidi_dec_bytes[i:i + byte_count]
+        self.bidi_app['decoder_unique'] = bidi_make_data(datagram)
+        # Manufacturer ID
+        mid = (self.bidi_app['decoder_unique'] >> 32) & 0xFFF
+        self.put(self.bidi_bytes_ss[i + 1],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [
+                     Ann.BIDI_DATA,
+                     ['Manufacturer ID={}'.format(mid), 'MID={}'.format(mid)]
+                 ])
+        # UID
+        uid = self.bidi_app['decoder_unique'] & 0xFFFFFFFF
+        self.put(self.bidi_bytes_ss[i + 2],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 7], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, ['UID={}'.format(uid)]])
         return i + byte_count
 
     def csv_writerow(self):

@@ -95,6 +95,9 @@ SWITCH_TIMES = [
     '12.3s', '12.4s', '12.5s', '12.6s', 'On'
 ]
 
+CHECK_SIGN = '\u2714'
+CROSS_MARK = '\u2718'
+
 
 def decode_instruction(byte):
     '''Decode instruction for basic or extended loco decoder.
@@ -195,6 +198,27 @@ def decode_rggggggg(rggggggg):
     elif not (rggggggg & 0b01111110):
         return 'EStop'
     return str((rggggggg & 0b01111111) - 1)
+
+
+def crc8(bytes, init=0x00):
+    '''Calculate CRC8 maxim.
+ 
+    :param bytes: Bytes of a DCC packet
+    :type bytes: bytearray
+    :param init: Initial value
+    :type init: int
+    :return: CRC8
+    :rtype: int
+    '''
+    crc = init & 0xFF
+    for b in bytes:
+        crc ^= b
+        for _ in range(8):
+            if crc & 0x01:
+                crc = (crc >> 1) ^ 0x8C
+            else:
+                crc >>= 1
+    return crc
 
 
 def exor(bytes):
