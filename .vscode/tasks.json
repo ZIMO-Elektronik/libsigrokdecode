@@ -5,13 +5,13 @@
       "label": "Launch PulseView",
       "type": "shell",
       "isBackground": true,
-      "command": "SIGROKDECODE_DIR=./decoders/ /home/vinci/Applications/pulseview-*.appimage",
+      "command": "SIGROKDECODE_DIR=./decoders/ ~/AppImages/pulseview*.appimage",
     },
     {
       "label": "Launch PulseView --loglevel=5",
       "type": "shell",
       "isBackground": true,
-      "command": "SIGROKDECODE_DIR=./decoders/ /home/vinci/Applications/pulseview-*.appimage --loglevel=5",
+      "command": "SIGROKDECODE_DIR=./decoders/ ~/AppImages/pulseview*.appimage --loglevel=5",
     },
   ]
 }

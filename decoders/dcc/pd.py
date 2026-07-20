@@ -429,7 +429,8 @@ class Decoder(srd.Decoder):
         fstr = ' | '.join('F{}={}'.format(xx + i, f[i]) for i in range(8))
         self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
                  [self.get_ann_instr(), [fstr]])
-        return i + BYTE_HBIT
+        i = self.annotate_dcc_byte(i)
+        return i
 
     def bidi_annotate_app_adr_helper(self, i):
         '''Convenience helper for annotating 'app:adr_high' and 'app_adr_low' datagrams.'''
@@ -1979,7 +1980,6 @@ class Decoder(srd.Decoder):
         elif 0x3F == a13_8:
             self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann,
                      [self.get_ann_instr(), ['Firmware update', 'FW update']])
-
         i = self.annotate_dcc_byte(i)
         return self.annotate_dcc_crc8(i)
 
