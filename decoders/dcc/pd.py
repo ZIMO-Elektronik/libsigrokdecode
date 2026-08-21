@@ -2047,7 +2047,13 @@ class Decoder(srd.Decoder):
                  [Ann.FRAME_CHECKSUM, anns])
         if checksum:
             self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                     [Ann.ERROR, ['Checksum should be {}'.format(checksum)]])
+                     [
+                         Ann.ERROR,
+                         [
+                             'Checksum should be 0x{:02X}'.format(
+                                 exor(self.dcc_bytes[:-1]))
+                         ]
+                     ])
         # Eventually add empty \n to help readability for exported annotations
         anns[0] = anns[0] + self.empty_new_line_after_packets_annotation
         self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
