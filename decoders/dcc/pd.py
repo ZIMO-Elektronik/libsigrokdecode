@@ -1820,14 +1820,14 @@ class Decoder(srd.Decoder):
         self.dcc_bytes.append(self.get_dcc_byte_at(i))
         bbbbbbbb = self.dcc_bytes[-1]
         block_map = {
-            0: ['Extended Capabilities'],
-            1: ['SpaceInfo'],
-            2: ['ShortGUI'],
-            3: ['CV-Block'],
-            4: ['Icon'],
-            5: ['Name'],
-            6: ['DecoderInfo'],
-            7: ['VehicleInfo'],
+            0: 'Extended Capabilities',
+            1: 'SpaceInfo',
+            2: 'ShortGUI',
+            3: 'CV-Block',
+            4: 'Icon',
+            5: 'Name',
+            6: 'DecoderInfo',
+            7: 'VehicleInfo',
         }
         if bbbbbbbb == 0b11111111:
             self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
