@@ -1955,8 +1955,7 @@ class Decoder(srd.Decoder):
                     'Accessory={}'.format(addr)
                 ]
             ])
-            pass
-        elif 0x30 <= a13_8 <= 0x37:  # Basic accessory
+        elif 0x30 <= a13_8 <= 0x37:
             addr = (a13_8 << 8 | self.dcc_bytes[-1]) & 0x7FF
             self.put(ss, self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
                 self.get_ann_instr(),
@@ -2276,10 +2275,16 @@ class Decoder(srd.Decoder):
                 else:
                     return
             elif self.last_dcc_addr_type == 'AUTOMATIC_LOGON':
-                if id == 13:
-                    i = self.annotate_bidi_id_and_data_app_decoder_state(i)
-                elif id == 15:
-                    i = self.annotate_bidi_id_and_data_app_decoder_unique(i)
+                if (self.last_dcc_bytes[1] & 0b11110000) == 0b11010000:
+                    if self.last_dcc_bytes[7] == 0b11111111:
+                        i = self.annotate_bidi_data_read_short_info(i)
+                elif (self.last_dcc_bytes[1] & 0b11110000) == 0b11100000:
+                    if id == 13:
+                        i = self.annotate_bidi_id_and_data_app_decoder_state(i)
+                elif (self.last_dcc_bytes[1] & 0b11111100) == 0b11111100:
+                    if id == 15:
+                        i = self.annotate_bidi_id_and_data_app_decoder_unique(
+                            i)
                 return
             else:
                 return
@@ -2787,13 +2792,13 @@ class Decoder(srd.Decoder):
         fstr += 'Address/ShortGUI={}'.format((flags >> 7) & 0b1)
         self.put(self.bidi_bytes_ss[i + 1],
                  self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
-                 self.out_ann, [Ann.BIDI_ID, [fstr]])
+                 self.out_ann, [Ann.BIDI_DATA, [fstr]])
         # Change count
         change_count = (self.bidi_app['decoder_state'] >> 24) & 0xFFF
         self.put(self.bidi_bytes_ss[i + 2],
                  self.ss_us2es(self.bidi_bytes_ss[i + 2],
                                10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_ID, ['Change count={}'.format(change_count)]])
+                 [Ann.BIDI_DATA, ['Change count={}'.format(change_count)]])
         # Extended capabilities
         caps = (self.bidi_app['decoder_state'] >> 8) & 0xFFFF
         fstr = 'Dynamic CH1={} | '.format((caps >> 8) & 0b1)
@@ -2817,12 +2822,114 @@ class Decoder(srd.Decoder):
                                                                 & 0b1)
         self.put(self.bidi_bytes_ss[i + 3],
                  self.ss_us2es(self.bidi_bytes_ss[i + 6], 10 * BIDI_BIT_TIME),
-                 self.out_ann, [Ann.BIDI_ID, [fstr]])
+                 self.out_ann, [Ann.BIDI_DATA, [fstr]])
         # CRC
         crc = (self.bidi_app['decoder_state'] >> 0) & 0xFF
         self.put(self.bidi_bytes_ss[i + 7],
                  self.ss_us2es(self.bidi_bytes_ss[i + 7], 10 * BIDI_BIT_TIME),
-                 self.out_ann, [Ann.BIDI_ID, ['CRC=0x{:02X}'.format(crc)]])
+                 self.out_ann, [Ann.BIDI_DATA, ['CRC=0x{:02X}'.format(crc)]])
+        return i + byte_count
+
+    def annotate_bidi_data_read_short_info(self, i):
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['ShortInfo']])
+        byte_count = bidi_datagram_size(48)
+        datagram = self.bidi_dec_bytes[i:i + byte_count]
+        self.bidi_app['short_info'] = bidi_make_data_without_id(datagram)
+        # Byte0:7 must be set to indicate special format
+        if not self.bidi_app['short_info'] & (1 << 47):
+            self.put(
+                self.bidi_bytes_ss[i + 1],
+                self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                self.out_ann, [Ann.BIDI_DATA, ['Byte0:7 not set']])
+            return i + byte_count
+        # Address
+        a13_0 = (self.bidi_app['short_info'] >> 32) & 0x3FFF
+        a13_8 = a13_0 >> 8
+        if 0x00 <= a13_8 <= 0x27:
+            addr = a13_0
+            self.put(
+                self.bidi_bytes_ss[i + 1],
+                self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                self.out_ann, [
+                    Ann.BIDI_DATA,
+                    ['Extended Loco={}'.format(addr), 'Loco={}'.format(addr)]
+                ])
+        elif 0x28 <= a13_8 <= 0x2F:
+            addr = a13_0 & 0x7FF
+            self.put(
+                self.bidi_bytes_ss[i + 1],
+                self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                self.out_ann, [
+                    Ann.BIDI_DATA,
+                    [
+                        'Extended Accessory={}'.format(addr),
+                        'Accessory={}'.format(addr)
+                    ]
+                ])
+        elif 0x30 <= a13_8 <= 0x37:
+            addr = a13_0 & 0x7FF
+            self.put(
+                self.bidi_bytes_ss[i + 1],
+                self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                self.out_ann, [
+                    Ann.BIDI_DATA,
+                    [
+                        'Basic Accessory={}'.format(addr),
+                        'Accessory={}'.format(addr)
+                    ]
+                ])
+        elif 0x38 == a13_8:
+            addr = a13_0 & 0x7F
+            self.put(
+                self.bidi_bytes_ss[i + 1],
+                self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                self.out_ann, [
+                    Ann.BIDI_DATA,
+                    ['Basic Loco={}'.format(addr), 'Loco={}'.format(addr)]
+                ])
+        # Highest function number for loco, turnout pair for basic- or aspect for extended accessory
+        highest = (self.bidi_app['short_info'] >> 24) & 0xFF
+        if 0x00 <= a13_8 <= 0x27 or 0x38 == a13_8:
+            fstr = 'Highest Function Assignment={}'.format(highest)
+        elif 0x28 <= a13_8 <= 0x2F:
+            fstr = 'Highest Aspect={}'.format(highest)
+        elif 0x30 <= a13_8 <= 0x37:
+            fstr = 'Highest Output Pairs={}'.format(highest)
+        self.put(self.bidi_bytes_ss[i + 2],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 2], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, [fstr]])
+        # Features
+        feats = (self.bidi_app['short_info'] >> 16) & 0xFF
+        fstr = 'XDCC WriteBlock={} | '.format((feats >> 1) & 0b1)
+        fstr += 'SELECT WriteBlock={} | '.format((feats >> 2) & 0b1)
+        fstr += 'XDCC ReadBackground={} | '.format((feats >> 3) & 0b1)
+        fstr += 'XDCC ReadBlock={} | '.format((feats >> 4) & 0b1)
+        fstr += 'SELECT GET_DATA={} | '.format((feats >> 5) & 0b1)
+        fstr += 'XPOM={} | '.format((feats >> 6) & 0b1)
+        fstr += 'FW Update={}'.format((feats >> 7) & 0b1)
+        self.put(self.bidi_bytes_ss[i + 3],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 4], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, [fstr]])
+        # Supported dataspaces
+        dataspace = (self.bidi_app['short_info'] >> 8) & 0xFF
+        fstr = 'Capabilities={} | '.format((dataspace >> 0) & 0b1)
+        fstr += 'DataSpaceInfo={} | '.format((dataspace >> 1) & 0b1)
+        fstr += 'ShortGUI={} | '.format((dataspace >> 2) & 0b1)
+        fstr += 'CVs={} | '.format((dataspace >> 3) & 0b1)
+        fstr += 'Icons={} | '.format((dataspace >> 4) & 0b1)
+        fstr += 'Name={} | '.format((dataspace >> 5) & 0b1)
+        fstr += 'ProductInfo={} | '.format((dataspace >> 6) & 0b1)
+        fstr += 'LocoInfo={}'.format((dataspace >> 7) & 0b1)
+        self.put(self.bidi_bytes_ss[i + 5],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 6], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, [fstr]])
+        # CRC
+        crc = (self.bidi_app['short_info'] >> 0) & 0xFF
+        self.put(self.bidi_bytes_ss[i + 7],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 7], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_DATA, ['CRC=0x{:02X}'.format(crc)]])
         return i + byte_count
 
     def annotate_bidi_id_and_data_app_decoder_unique(self, i):
@@ -2845,7 +2952,7 @@ class Decoder(srd.Decoder):
         uid = self.bidi_app['decoder_unique'] & 0xFFFFFFFF
         self.put(self.bidi_bytes_ss[i + 2],
                  self.ss_us2es(self.bidi_bytes_ss[i + 7], 10 * BIDI_BIT_TIME),
-                 self.out_ann, [Ann.BIDI_DATA, ['UID={}'.format(uid)]])
+                 self.out_ann, [Ann.BIDI_DATA, ['UID=0x{:08X}'.format(uid)]])
         return i + byte_count
 
     def csv_writerow(self):

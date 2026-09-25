@@ -270,12 +270,24 @@ def bidi_make_data(datagram):
     :return: Data from decoded BiDi bytes
     :rtype: int
     '''
+    data = bidi_make_data_without_id(datagram)
+    bit_count = len(datagram) * 6 - 4  # Remove ID
+    return data & ((1 << bit_count) - 1)
+
+
+def bidi_make_data_without_id(datagram):
+    '''Make data from decoded BiDi bytes without ID.
+
+    :param datagram: Decoded BiDi bytes
+    :type datagram: bytearray
+    :return: Data from decoded BiDi bytes
+    :rtype: int
+    '''
     data = 0
     for b in datagram:
         data <<= 6
         data |= b & 0x3F
-    bit_count = len(datagram) * 6 - 4
-    return data & ((1 << bit_count) - 1)
+    return data
 
 
 def bidi_datagram_size(bits):
