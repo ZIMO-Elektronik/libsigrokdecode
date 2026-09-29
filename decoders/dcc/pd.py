@@ -1775,8 +1775,10 @@ class Decoder(srd.Decoder):
         return i
 
     def annotate_dcc_instr_automatic_logon_get_data(self, i):
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['TODO']])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['GET_DATA_CONT' if self.dcc_bytes[-1] else 'GET_DATA_START']
+        ])
         i += BYTE_HBIT
         return i
 
@@ -2275,7 +2277,18 @@ class Decoder(srd.Decoder):
                 else:
                     return
             elif self.last_dcc_addr_type == 'AUTOMATIC_LOGON':
-                if (self.last_dcc_bytes[1] & 0b11110000) == 0b11010000:
+                if self.last_dcc_bytes[1] in (0b00000000, 0b00000001):
+                    i = self.annotate_bidi_data_get_data(i)
+                elif self.last_dcc_bytes[1] in (0b00000010, 0b00000011):
+                    i = self.annotate_bidi_data_set_data(i)
+                elif self.last_dcc_bytes[1] in (0b11010000, 0b11010001,
+                                                0b11010010, 0b11010011,
+                                                0b11010100, 0b11010101,
+                                                0b11010110, 0b11010111,
+                                                0b11011000, 0b11011001,
+                                                0b11011010, 0b11011011,
+                                                0b11011100, 0b11011101,
+                                                0b11011110, 0b11011111):
                     if self.last_dcc_bytes[7] == 0b11111111:
                         i = self.annotate_bidi_data_read_short_info(i)
                 elif (self.last_dcc_bytes[1] & 0b11110000) == 0b11100000:
@@ -2828,6 +2841,34 @@ class Decoder(srd.Decoder):
         self.put(self.bidi_bytes_ss[i + 7],
                  self.ss_us2es(self.bidi_bytes_ss[i + 7], 10 * BIDI_BIT_TIME),
                  self.out_ann, [Ann.BIDI_DATA, ['CRC=0x{:02X}'.format(crc)]])
+        return i + byte_count
+
+    def annotate_bidi_data_get_data(self, i):
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['GET_DATA']])
+        byte_count = bidi_datagram_size(48)
+        datagram = self.bidi_dec_bytes[i:i + byte_count]
+        self.bidi_app['get_data'] = bidi_make_data_without_id(datagram)
+        bytes = self.bidi_app['get_data'].to_bytes(6, byteorder='big')
+        self.put(self.bidi_bytes_ss[i + 2],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 7],
+                               10 * BIDI_BIT_TIME), self.out_ann,
+                 [Ann.BIDI_DATA, [' '.join(f'0x{b:02X}' for b in bytes)]])
+        return i + byte_count
+
+    def annotate_bidi_data_set_data(self, i):
+        self.put(self.bidi_bytes_ss[i],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 1], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [Ann.BIDI_ID, ['SET_DATA']])
+        byte_count = bidi_datagram_size(48)
+        datagram = self.bidi_dec_bytes[i:i + byte_count]
+        self.bidi_app['set_data'] = bidi_make_data_without_id(datagram)
+        bytes = self.bidi_app['set_data'].to_bytes(6, byteorder='big')
+        self.put(self.bidi_bytes_ss[i + 2],
+                 self.ss_us2es(self.bidi_bytes_ss[i + 7],
+                               10 * BIDI_BIT_TIME), self.out_ann,
+                 [Ann.BIDI_DATA, [' '.join(f'0x{b:02X}' for b in bytes)]])
         return i + byte_count
 
     def annotate_bidi_data_read_short_info(self, i):
