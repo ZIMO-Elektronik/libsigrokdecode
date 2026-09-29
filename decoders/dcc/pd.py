@@ -1775,8 +1775,10 @@ class Decoder(srd.Decoder):
         return i
 
     def annotate_dcc_instr_automatic_logon_get_data(self, i):
-        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann,
-                 [self.get_ann_instr(), ['TODO']])
+        self.put(self.dcc_ss[i], self.dcc_ss[i + BYTE_HBIT], self.out_ann, [
+            self.get_ann_instr(),
+            ['GET_DATA_CONT' if self.dcc_bytes[-1] else 'GET_DATA_START']
+        ])
         i += BYTE_HBIT
         return i
 
