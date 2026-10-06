@@ -2814,24 +2814,24 @@ class Decoder(srd.Decoder):
                  [Ann.BIDI_DATA, ['Change count={}'.format(change_count)]])
         # Extended capabilities
         caps = (self.bidi_app['decoder_state'] >> 8) & 0xFFFF
-        fstr = 'Dynamic CH1={} | '.format((caps >> 8) & 0b1)
-        fstr += 'Info1 (ID3)={} | '.format((caps >> 9) & 0b1)
-        fstr += 'Location Service (ID3)={} | '.format((caps >> 10) & 0b1)
-        fstr += 'Speed (ID7:0-1)={} | '.format((caps >> 11) & 0b1)
-        fstr += 'QoS (ID7:7)={} | '.format((caps >> 12) & 0b1)
-        fstr += 'Status and Error Messages (ID7:21)={} | '.format((caps >> 13)
+        fstr = 'Dynamic CH1={} | '.format((caps >> 0) & 0b1)
+        fstr += 'Info1 (ID3)={} | '.format((caps >> 1) & 0b1)
+        fstr += 'Location Service (ID3)={} | '.format((caps >> 2) & 0b1)
+        fstr += 'Speed (ID7:0-1)={} | '.format((caps >> 3) & 0b1)
+        fstr += 'QoS (ID7:7)={} | '.format((caps >> 4) & 0b1)
+        fstr += 'Status and Error Messages (ID7:21)={} | '.format((caps >> 5)
                                                                   & 0b1)
-        fstr += 'Temperature (ID7:26)={} | '.format((caps >> 14) & 0b1)
-        fstr += 'Direction Status Byte (ID7:27)={} | '.format((caps >> 15)
+        fstr += 'Temperature (ID7:26)={} | '.format((caps >> 6) & 0b1)
+        fstr += 'Direction Status Byte (ID7:27)={} | '.format((caps >> 7)
                                                               & 0b1)
-        fstr += 'CV-Auto (ID12)={} | '.format((caps >> 16) & 0b1)
-        fstr += 'Binary State Short={} | '.format((caps >> 17) & 0b1)
-        fstr += 'Binary State Long={} | '.format((caps >> 18) & 0b1)
-        fstr += 'Speed, Direction and Functions={} | '.format((caps >> 19)
+        fstr += 'CV-Auto (ID12)={} | '.format((caps >> 8) & 0b1)
+        fstr += 'Binary State Short={} | '.format((caps >> 9) & 0b1)
+        fstr += 'Binary State Long={} | '.format((caps >> 10) & 0b1)
+        fstr += 'Speed, Direction and Functions={} | '.format((caps >> 11)
                                                               & 0b1)
-        fstr += 'CV Access Short | '.format((caps >> 20) & 0b1)
-        fstr += 'Special Operating Modes={} | '.format((caps >> 22) & 0b1)
-        fstr += 'Multiple Instructions Single Packet={}'.format((caps >> 23)
+        fstr += 'CV Access Short | '.format((caps >> 12) & 0b1)
+        fstr += 'Special Operating Modes={} | '.format((caps >> 14) & 0b1)
+        fstr += 'Multiple Instructions Single Packet={}'.format((caps >> 15)
                                                                 & 0b1)
         self.put(self.bidi_bytes_ss[i + 3],
                  self.ss_us2es(self.bidi_bytes_ss[i + 6], 10 * BIDI_BIT_TIME),
@@ -2852,9 +2852,11 @@ class Decoder(srd.Decoder):
         self.bidi_app['get_data'] = bidi_make_data_without_id(datagram)
         bytes = self.bidi_app['get_data'].to_bytes(6, byteorder='big')
         self.put(self.bidi_bytes_ss[i + 2],
-                 self.ss_us2es(self.bidi_bytes_ss[i + 7],
-                               10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, [' '.join(f'0x{b:02X}' for b in bytes)]])
+                 self.ss_us2es(self.bidi_bytes_ss[i + 7], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [
+                     Ann.BIDI_DATA,
+                     [f'Bytes=[{" ".join(f"0x{b:02X}" for b in bytes)}]']
+                 ])
         return i + byte_count
 
     def annotate_bidi_data_set_data(self, i):
@@ -2866,9 +2868,11 @@ class Decoder(srd.Decoder):
         self.bidi_app['set_data'] = bidi_make_data_without_id(datagram)
         bytes = self.bidi_app['set_data'].to_bytes(6, byteorder='big')
         self.put(self.bidi_bytes_ss[i + 2],
-                 self.ss_us2es(self.bidi_bytes_ss[i + 7],
-                               10 * BIDI_BIT_TIME), self.out_ann,
-                 [Ann.BIDI_DATA, [' '.join(f'0x{b:02X}' for b in bytes)]])
+                 self.ss_us2es(self.bidi_bytes_ss[i + 7], 10 * BIDI_BIT_TIME),
+                 self.out_ann, [
+                     Ann.BIDI_DATA,
+                     [f'Bytes=[{" ".join(f"0x{b:02X}" for b in bytes)}]']
+                 ])
         return i + byte_count
 
     def annotate_bidi_data_read_short_info(self, i):
