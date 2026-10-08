@@ -170,7 +170,7 @@ class Decoder(srd.Decoder):
         ('timing_valid', 'Valid'),
         ('timing_invalid', 'Invalid'),  #
         ('bit', 'Bit'),  #
-        ('byte', 'Byte'),  # 
+        ('byte', 'Byte'),  #
         ('error', 'Error'),  #
         ('frame_preamble', 'Preamble'),
         ('frame_startbit', 'Start Bit'),
@@ -178,9 +178,9 @@ class Decoder(srd.Decoder):
         ('frame_instruction', 'Instruction'),
         ('frame_checksum', 'Checksum'),
         ('frame_endbit', 'End Bit'),
-        ('service_instruction', 'Instruction'),  # 
+        ('service_instruction', 'Instruction'),  #
         ('broadcast_address', 'Address'),
-        ('broadcast_instr', 'Instruction'),  # 
+        ('broadcast_instr', 'Instruction'),  #
         ('loco_address', 'Address'),
         ('loco_instr', 'Instruction'),  #
         ('accessory_address', 'Address'),
@@ -312,7 +312,7 @@ class Decoder(srd.Decoder):
 
     def ss_es2us(self, startsample, endsample):
         '''Get difference between start- and endsample in µs.
-        
+
         :param startsample: Startsample
         :type startsample: int
         :param endsample: Endsample
@@ -324,7 +324,7 @@ class Decoder(srd.Decoder):
 
     def ss_us2es(self, startsample, us):
         '''Get endsample from startsample and µs.
-        
+
         :param startsample: Startsample
         :type startsample: int
         :param us: Microseconds to add to startsample
@@ -336,7 +336,7 @@ class Decoder(srd.Decoder):
 
     def us2hbit(self, us):
         '''Get DCC halfbit from µs.
-        
+
         :param us: Microseconds
         :type us: int
         :return: Bit
@@ -353,7 +353,7 @@ class Decoder(srd.Decoder):
 
     def ss_es2hbit(self, startsample, endsample):
         '''Get DCC halfbit from start- and endsample.
-        
+
         :param startsample: Startsample
         :type startsample: int
         :param endsample: Endsample
@@ -365,7 +365,7 @@ class Decoder(srd.Decoder):
 
     def ss_es2bidi_bits_passed(self, startsample, endsample):
         '''Calculate how many BiDi UART bits fit between start- and endsample.
-        
+
         :param startsample: Startsample
         :type startsample: int
         :param endsample: Endsample
@@ -378,7 +378,7 @@ class Decoder(srd.Decoder):
 
     def get_ann_instr(self):
         '''Convenience getter for instruction annotation.
-        
+
         :return: Annotation enumeration value for current instruction
         :rtype: SrdIntEnum
         '''
@@ -401,7 +401,7 @@ class Decoder(srd.Decoder):
 
     def get_dcc_byte_at(self, i):
         '''Convert halfbits to DCC byte at index.
-        
+
         :param i: Index
         :type i: int
         :return: Byte at i
@@ -600,11 +600,16 @@ class Decoder(srd.Decoder):
         return i + BYTE_HBIT
 
     def annotate_dcc_timings_bits_and_errors(self):
-        # The preamble might be odd, so get the second 1-bit and first 0-bit to
-        # determine when to start looking for matching hbits
-        second_1 = self.dcc_hbits.index(1, self.dcc_hbits.index(1) + 1)
-        first_0 = self.dcc_hbits.index(0)
         '''Annotate DCC timings, bits and errors.'''
+        # The preamble might be odd, so get the second 1-bit and first 0-bit to
+        # determine when to start looking for matching hbits. Aborted packets
+        # (e.g. after an invalid halfbit) may contain neither, in that case only
+        # the timings can be annotated.
+        try:
+            second_1 = self.dcc_hbits.index(1, self.dcc_hbits.index(1) + 1)
+            first_0 = self.dcc_hbits.index(0)
+        except ValueError:
+            second_1 = first_0 = None
         for i in range(0, len(self.dcc_hbits), 1):
             us = self.ss_es2us(self.dcc_ss[i], self.dcc_ss[i + 1])
             if i == 0 and BIDI_TCS_MIN <= us <= BIDI_TCS_MAX:
@@ -627,7 +632,8 @@ class Decoder(srd.Decoder):
                     us) == -1 else Ann.TIMING_VALID
                 self.put(self.dcc_ss[i], self.dcc_ss[i + 1], self.out_ann,
                          [ann, ['{}µs'.format(us), str(us)]])
-                if i >= second_1 and (i - first_0) & 0b1:
+                if second_1 is not None and i >= second_1 and (i -
+                                                               first_0) & 0b1:
                     hb0 = self.dcc_hbits[i - 1]
                     hb1 = self.dcc_hbits[i]
                     if hb0 == hb1:
@@ -680,7 +686,7 @@ class Decoder(srd.Decoder):
 
     def annotate_dcc_address(self, i):
         '''Annotate and decode DCC address.
-        
+
         :param i: Index
         :type i: int
         :return: Tuple of index after annotation, DCC address and DCC address type
@@ -836,7 +842,7 @@ class Decoder(srd.Decoder):
 
     def annotate_dcc_instr_unknown(self, i):
         '''Annotate unknown DCC instruction.
-        
+
         This function annotates whatever is left between the last annotated data byte and the checksum.
         '''
         # As long as there are halfbits minus checksum and endbit
@@ -2829,7 +2835,7 @@ class Decoder(srd.Decoder):
         fstr += 'Binary State Long={} | '.format((caps >> 10) & 0b1)
         fstr += 'Speed, Direction and Functions={} | '.format((caps >> 11)
                                                               & 0b1)
-        fstr += 'CV Access Short | '.format((caps >> 12) & 0b1)
+        fstr += 'CV Access Short={} | '.format((caps >> 12) & 0b1)
         fstr += 'Special Operating Modes={} | '.format((caps >> 14) & 0b1)
         fstr += 'Multiple Instructions Single Packet={}'.format((caps >> 15)
                                                                 & 0b1)
